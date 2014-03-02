@@ -1,0 +1,26 @@
+target
+.classpath
+.cache
+.project
+.settings
+.worksheet
+
+#copied from GitHub defaults:
+*.class
+*.log
+
+# sbt specific
+dist/*
+target/
+lib/spark*
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+
+# not sure if this should be here
+.idea/
+.idea_modules/
