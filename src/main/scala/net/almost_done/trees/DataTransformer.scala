@@ -1,10 +1,10 @@
+package net.almost_done.trees
+
 /**
  * Created by nietaki on 3/3/14.
  */
 
 import org.apache.spark.rdd._
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 class DataTransformer(val lines: RDD[String]) {
 
   val nameCollections = lines.map({ line =>

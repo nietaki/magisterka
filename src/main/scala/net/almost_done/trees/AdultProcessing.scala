@@ -1,9 +1,10 @@
-/**
- * Created by nietaki on 3/3/14.
- */
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
+package net.almost_done.trees
 
+import org.apache.spark.SparkContext
+
+/**
+ * Created by nietaki on 3/6/14.
+ */
 object AdultProcessing {
   def main(args: Array[String]) {
 

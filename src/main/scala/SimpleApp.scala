@@ -1,10 +1,8 @@
-/**
- * Created by nietaki on 3/2/14.
- */
-/*** SimpleApp.scala ***/
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 
+/**
+ * Created by nietaki on 3/6/14.
+ */
 object SimpleApp {
   def main(args: Array[String]) {
     val logFile = "README.md" // Should be some file on your system
