@@ -6,14 +6,12 @@ package net.almost_done.trees
 case object ContinuousDouble extends AttributeType  {
   type ValueType = Double
 
-  override def retrieveStringRepresentation(value: ValueType): String = value.toString
+  override def retrieveRepresentation(value: ValueType): String = value.toString
 
-  override def parseStringRepresentation(representation: String): Option[ValueType] =  {
-    var ret: Option[ValueType] = None;
-    try {
-      Some(representation.toDouble)
-    } catch {
-      case _: NumberFormatException => None
+  //TODO catch the exception here and do another partial function that will drop the None, same in Integer
+  override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] =  {
+    case repr => {
+      Some(repr.toDouble) //yes, throwing here
     }
   }
 

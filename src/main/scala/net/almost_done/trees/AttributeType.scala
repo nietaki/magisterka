@@ -11,17 +11,25 @@ abstract class AttributeType {
    * @param representation string representation of the type
    * @return the value option
    */
-  def parseStringRepresentation(representation: String): Option[ValueType]
+  def parseRepresentation(representation: String): Option[ValueType] = {
+    (parseUnknown orElse parseRepresentationInner)(representation)
+  }
+
+  val parseUnknown: PartialFunction[String, Option[ValueType]] = {
+    case str if AttributeType.unknownStrings.contains(str) => None
+  }
+
+  def parseRepresentationInner: PartialFunction[String, Option[ValueType]]
 
   /**
    * @param valueOption
    * @return the string representation of the value
    */
-  def retrieveStringRepresentation(valueOption: Option[ValueType]): String = valueOption match {
-    case Some(value) => retrieveStringRepresentation(value);
+  def retrieveRepresentation(valueOption: Option[ValueType]): String = valueOption match {
+    case Some(value) => retrieveRepresentation(value);
     case None => defaultNoneString
   }
-  def retrieveStringRepresentation(value: ValueType): String;
+  def retrieveRepresentation(value: ValueType): String;
 
   val defaultNoneString: String = "?"
 }

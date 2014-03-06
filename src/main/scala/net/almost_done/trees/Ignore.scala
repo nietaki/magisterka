@@ -6,7 +6,9 @@ package net.almost_done.trees
 case object Ignore extends AttributeType {
   type ValueType = Any
 
-  override def retrieveStringRepresentation(value: ValueType): String = "?"
+  override def retrieveRepresentation(value: ValueType): String = "?"
 
-  override def parseStringRepresentation(representation: String): Option[ValueType] = None
+  override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] =  {
+    case _ => None
+  }
 }

@@ -9,11 +9,11 @@ case class Nominal(values: Array[String]) extends AttributeType {
   type ValueType = Int
   val nominalValues: Vector[String] = Vector(values: _*)
 
-  val zipped: Map[String,ValueType] = nominalValues.zipWithIndex.toMap
+  val nameIndices: Map[String,ValueType] = nominalValues.zipWithIndex.toMap
 
-  override def retrieveStringRepresentation(value: ValueType): String = nominalValues(value)
+  override def retrieveRepresentation(value: ValueType): String = nominalValues(value)
 
-  override def parseStringRepresentation(representation: String): Option[ValueType] = Some(zipped(representation)) //yes, we intend to throw here
+  override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] = nameIndices.andThen(Some(_))
 
   override def toString = "Nominal: " + nominalValues.reduce(_ + ", " + _)
 }

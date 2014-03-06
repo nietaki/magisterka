@@ -6,14 +6,11 @@ package net.almost_done.trees
 case object ContinuousInteger extends AttributeType {
   type ValueType = Int
 
-  override def retrieveStringRepresentation(value: ContinuousInteger.ValueType): String = value.toString
+  override def retrieveRepresentation(value: ContinuousInteger.ValueType): String = value.toString
 
-  override def parseStringRepresentation(representation: String): Option[ContinuousInteger.ValueType] =  {
-    var ret: Option[ValueType] = None;
-    try {
-      Some(representation.toInt)
-    } catch {
-      case _: NumberFormatException => None
+  override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] =  {
+    case repr => {
+      Some(repr.toInt) //yes, throwing here
     }
   }
 }
