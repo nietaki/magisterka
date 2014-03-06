@@ -4,6 +4,8 @@ target
 .project
 .settings
 .worksheet
+*.swp
+
 
 #copied from GitHub defaults:
 *.class

@@ -2,20 +2,28 @@
 
 # help #
 to compile and run your code:
+
 `sbt package
 sbt run`
 
 to run a specific main class with arguments:
-`sbt "run SimpleApp arg"`
+
+`sbt "run-main SimpleApp arg"`
 
 
 To generate the intelliJ project:
+
 `sbt gen-idea`
 
 To start the master:
+
 `./sbin/start-master.sh`
+
 point browser to localhost:8080 to get the master url
+
 `./sbin/start-slave.sh 1 spark://xebab:7077`
+
+
 
 ## Why is the spark dependency in build.sbt commented out? ##
 If you use spark downloaded from the repositories, you have to make sure you are using the same version (the same .jar)
