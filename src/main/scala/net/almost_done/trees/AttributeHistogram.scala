@@ -28,9 +28,13 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
   lazy val binCount = arr.length - 1
 
   /** for convenience index of the last modified value */
-  lazy val lastIndex = arr.length - 1
+  lazy val additionalBinIndex = arr.length - 1
 
-  val resultingBins = arr.view(0, lastIndex)
+  val resultingBins = arr.view(0, additionalBinIndex)
+
+  def binKeys = resultingBins.map{pr => pr._1}.toSeq
+  def binKeysAll = arr.map{pr => pr._1}.toSeq
+
   assert(resultingBins.length == arr.length - 1)
 
 
@@ -44,27 +48,33 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
     /* PART 1 - insert */
     val updatingTuple = Tuple2(newOccurrence.toDouble(), 1)
     //arr.update(arr.length - 1, Tuple2(newOccurrence.toDouble(), 1))
-    val withoutLast = arr.view(0, lastIndex)
+    val withoutLast = arr.view(0, additionalBinIndex)
 
-    /* this is where the new tuple should go */
+    /* this is where the new tuple should go - what value it should push towards the back */
     val targetIndex = AttributeHistogram.binarySearch(withoutLast, updatingTuple)
 
-    val curIndex = targetIndex;
+    //adding the new value and pushing the later ones forward
     var newTuple = updatingTuple;
-    Range(curIndex, lastIndex).inclusive.foreach( idx => {
+    Range(targetIndex, additionalBinIndex).inclusive.foreach( idx => {
       val curTuple = arr(idx)
-      arr.update(curIndex, newTuple)
+      arr.update(idx, newTuple)
       newTuple = curTuple
     })
 
     /* PART 2 - finding the tuples to combine */
     var minDifference = Double.PositiveInfinity
     var minDiffIdx: Int = 0;
-    Range(0, lastIndex).foreach(idx => {
+    Range(0, additionalBinIndex).foreach(idx => {
       val diff = arr(idx+1)._1 - arr(idx)._1
       if(diff < minDifference) {
         minDiffIdx = idx
         minDifference = diff
+      }
+
+      if(arr(idx)._2 == 0) {
+        //the bin is empty, we can replace it no worries
+        minDiffIdx = idx
+        minDifference = 0.0
       }
     })
 
@@ -72,19 +82,24 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
 
     /* PART 3 - assigning and combining */
     arr.update(minDiffIdx, combined)
-    Range(minDiffIdx, lastIndex).foreach(idx => {
+    Range(minDiffIdx + 1, additionalBinIndex).foreach(idx => {
       arr.update(idx, arr(idx + 1))
     })
 
   }
 
-  def combineBins(b1: Bin, b2: Bin): Bin = {
+  protected def combineBins(b1: Bin, b2: Bin): Bin = {
     val (q1,k1) = b1
     val (q2,k2) = b2
 
-    val q = (q1 * k1 + q2 * k2) / (k1 + k2)
     val k = k1 + k2
-    (q, k)
+    if(k == 0) {
+      //we don't want to divide by 0
+      (0.0, 0)
+    } else {
+      val q = (q1 * k1 + q2 * k2) / (k1 + k2)
+      (q, k)
+    }
   }
   def merge = ???
   def sum = ???
