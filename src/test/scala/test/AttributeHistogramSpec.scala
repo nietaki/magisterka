@@ -7,11 +7,16 @@ import scala.collection.mutable
 import org.specs2.specification._
 import org.specs2.matcher.TraversableMatchers
 import scala.util.Random
+import org.specs2.ScalaCheck
 
 
-class AttributeHistogramSpec extends Specification with TraversableMatchers {
- 
+class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
+
+
   "binary search" should {
+    /* http://etorreborre.github.io/specs2/guide/org.specs2.guide.Matchers.html#ScalaCheck */
+    "be able to include scalacheck tests" ! prop { (a: Int) => a + a == 2 * a }
+
     import AttributeHistogram._
     "find any element" in {
       val arr = Array(10, 11, 12, 13, 14)
