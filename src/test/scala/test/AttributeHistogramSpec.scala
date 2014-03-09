@@ -14,6 +14,7 @@ import scala.util.Sorting
 
 class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
 
+  override implicit def defaultParameters = new Parameters(minTestsOk = 1000)
 
 
   "binary search" should {
@@ -125,17 +126,17 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       binKeys must containTheSameElementsAs(values.map{_.toDouble}).updateMessage(s => s + " " + binKeys.toList)
     }
     val almostAnyInt = Gen.choose[Int](-100, 100)
-    val positiveInt = Gen.choose[Int](1, 100)
+    val smallIntBinCount = Gen.choose[Int](1, 10)
     val listOfInts = Gen.listOf(almostAnyInt)
 
-    "have the correct total item count in all bins" ! Prop.forAll(listOfInts, positiveInt) {(ls, binCount) => {
+    "have the correct total item count in all bins" ! Prop.forAll(listOfInts, smallIntBinCount) {(ls, binCount) => {
       val ah = AttributeHistogram.ZeroObject[Int](binCount)
       ls.foreach{ah.update(_)}
       val binCountSum = ah.resultingBins.map{_._2}.sum
       binCountSum mustEqual ls.length
     }}
 
-    "have the bins sorted" ! Prop.forAllNoShrink(listOfInts, positiveInt) {(ls, binCount) => {
+    "have the bins sorted" ! Prop.forAllNoShrink(listOfInts, smallIntBinCount) {(ls, binCount) => {
       val ah = AttributeHistogram.ZeroObject[Int](binCount)
       ls.foreach{ah.update(_)}
       ah.binKeys.sliding(2).filter(_.length >= 2).forall{seq =>
@@ -147,7 +148,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
      generally the bounds should be determined by the biggest and the smallest values in the updates. But truth is
      stranger than fiction so in practice it's a little more complicated
      */
-    "have the bin keys within bounds" ! Prop.forAllNoShrink(listOfInts, positiveInt) {(ls, binCount) => {
+    "have the bin keys within bounds" ! Prop.forAllNoShrink(listOfInts, smallIntBinCount) {(ls, binCount) => {
       val ah = AttributeHistogram.ZeroObject[Int](binCount) //we need at least 2 buckets for this test
       ls.foreach{ah.update(_)}
       (!ls.isEmpty && (binCount > 1) ) ==> ((ah.binKeys.head >= ls.min || ah.binKeys.head == 0) && (ah.binKeys.last <= ls.max || ah.binKeys.last == 0 ))
@@ -182,7 +183,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
     }
 
     val attributeHistogram: Gen[AttributeHistogram[Int]] = for {
-      bc <- Gen.choose[Int](1, 100)
+      bc <- Gen.choose[Int](1, 10)
       ls <- Gen.listOf(almostAnyInt)
     } yield {
       val ah = AttributeHistogram.ZeroObject[Int](bc)
@@ -190,7 +191,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah
     }
     val attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
-      bc <- Gen.choose[Int](2, 100)
+      bc <- Gen.choose[Int](2, 10)
       ls <- Gen.listOf(almostAnyInt)
       ls2 <- Gen.listOf(almostAnyInt)
     } yield {
@@ -229,7 +230,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
         val cummulativeWeightedAverage = (ah.weightedAverage * ah.observationCount + ah2.weightedAverage * ah2.observationCount) / (ah.observationCount + ah2.observationCount).toDouble
         ah.merge(ah2)
 
-        ah.weightedAverage must be closeTo(cummulativeWeightedAverage, math.abs(cummulativeWeightedAverage / 1000))
+        ah.weightedAverage must be closeTo(cummulativeWeightedAverage, math.abs(cummulativeWeightedAverage / 1000) + 0.01)
       }
     }
   }
