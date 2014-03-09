@@ -28,6 +28,8 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
    */
   lazy val binCount = arr.length - 1
 
+
+  def observationCount: Int = resultingBins.map(_._2).sum
   /** for convenience index of the last modified value */
   lazy val additionalBinIndex = arr.length - 1
 
@@ -62,29 +64,80 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
       newTuple = curTuple
     })
 
+    AttributeHistogram.shrinkBinArrayByOne(arr, additionalBinIndex)
+  }
+
+
+  def merge(other: AttributeHistogram[T]): Unit = {
+    assert(this.resultingBins.length == other.resultingBins.length)
+    val combinedBinsSorted = Sorting.stableSort(this.resultingBins ++ other.resultingBins)
+
+    val workingArray = Array.fill[Bin](combinedBinsSorted.length + 1)((0.0, 0)) //TODO: this could be more efficient
+    combinedBinsSorted.copyToArray(workingArray)
+    Range(combinedBinsSorted.length, additionalBinIndex, -1).inclusive.foreach{idx => {
+      AttributeHistogram.shrinkBinArrayByOne(workingArray, idx)
+    }}
+
+    workingArray.copyToArray(arr, 0, additionalBinIndex)
+  }
+  def sum = ???
+
+
+  override def toString = resultingBins.toList.toString
+}
+
+object AttributeHistogram {
+  import Numeric.Implicits._
+  import Ordering.Implicits._
+
+  type Bin = (Double, Int)
+
+  def ZeroObject[T](binCount: Integer)(implicit n: Numeric[T]) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2(0.0, 0)))
+
+  def binarySearch[A <% Ordered[A]](a: IndexedSeq[A], v: A) = {
+    @tailrec
+    def recurse(low: Int, high: Int): Int = (low + high) / 2 match {
+      //case _ if high < low => None
+      case _ if high < low => low //returning the bigger index of the two
+      case mid if a(mid) > v => recurse(low, mid - 1)
+      case mid if a(mid) < v => recurse(mid + 1, high)
+      case mid => mid
+    }
+    recurse(0, a.size - 1)
+  }
+
+    /**
+   * merges the appropriate bins together, effectively reducing binArray's size by 1
+   * @param binArray the binArray the method should be modifying
+   * @param currentItemCount currentItemCount. The Array should be bigger than currentItemCount by at least 1.
+   */
+  protected def shrinkBinArrayByOne(binArray: Array[Bin], currentItemCount: Int): Unit = {
+    /* finding the tuples to combine */
+    assert(binArray.length > currentItemCount)
+
     /* PART 2 - finding the tuples to combine */
     var minDifference = Double.PositiveInfinity
     var minDiffIdx: Int = 0;
-    Range(0, additionalBinIndex).foreach(idx => {
-      val diff = arr(idx+1)._1 - arr(idx)._1
+    Range(0, currentItemCount).foreach(idx => {
+      val diff = binArray(idx+1)._1 - binArray(idx)._1
       if(diff < minDifference) {
         minDiffIdx = idx
         minDifference = diff
       }
 
-      if(arr(idx)._2 == 0) {
+      if(binArray(idx)._2 == 0) {
         //the bin is empty, we can replace it no worries
         minDiffIdx = idx
         minDifference = 0.0
       }
     })
 
-    val combined = combineBins(arr(minDiffIdx), arr(minDiffIdx + 1))
+    val combined = combineBins(binArray(minDiffIdx), binArray(minDiffIdx + 1))
 
     /* PART 3 - assigning and combining */
-    arr.update(minDiffIdx, combined)
-    Range(minDiffIdx + 1, additionalBinIndex).foreach(idx => {
-      arr.update(idx, arr(idx + 1))
+    binArray.update(minDiffIdx, combined)
+    Range(minDiffIdx + 1, currentItemCount).foreach(idx => {
+      binArray.update(idx, binArray(idx + 1))
     })
 
   }
@@ -101,37 +154,5 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
       val q = (q1 * k1 + q2 * k2) / (k1 + k2)
       (q, k)
     }
-  }
-  def merge(other: AttributeHistogram[T]): Unit = {
-    val combinedBinsSorted = Sorting.stableSort(this.resultingBins ++ other.resultingBins)
-
-    val workingArray = new Array[Bin](combinedBinsSorted.length + 1)
-    combinedBinsSorted.copyToArray(workingArray)
-
-
-  }
-  def sum = ???
-
-
-}
-
-object AttributeHistogram {
-  import Numeric.Implicits._
-  import Ordering.Implicits._
-
-  type Bin = Tuple2[Double, Int]
-
-  def ZeroObject[T](binCount: Integer)(implicit n: Numeric[T]) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2(0.0, 0)))
-
-  def binarySearch[A <% Ordered[A]](a: IndexedSeq[A], v: A) = {
-    @tailrec
-    def recurse(low: Int, high: Int): Int = (low + high) / 2 match {
-      //case _ if high < low => None
-      case _ if high < low => low //returning the bigger index of the two
-      case mid if a(mid) > v => recurse(low, mid - 1)
-      case mid if a(mid) < v => recurse(mid + 1, high)
-      case mid => mid
-    }
-    recurse(0, a.size - 1)
   }
 }

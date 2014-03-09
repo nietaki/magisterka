@@ -153,7 +153,64 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       (!ls.isEmpty && (binCount > 1) ) ==> ((ah.binKeys.head >= ls.min || ah.binKeys.head == 0) && (ah.binKeys.last <= ls.max || ah.binKeys.last == 0 ))
     }}
 
-
   }
 
+  "ScalaCheck's generators" should {
+    val positiveInt = Gen.choose[Int](1, 100)
+    val almostAnyInt = Gen.choose[Int](-100, 100)
+    val tupleList:Gen[(List[Int], List[Int])] = {
+      for{
+        length <- positiveInt
+        la <- Gen.listOfN(length, almostAnyInt)
+        lb <- Gen.listOfN(length, almostAnyInt)
+      } yield (la, lb)
+    } // Dem Monads
+
+    val sameTupleList:Gen[(List[Int], List[Int])] = {
+      for{
+        length <- positiveInt
+        la <- Gen.listOfN(length, almostAnyInt)
+      } yield (la, la)
+    }
+
+    "work with for-comprehensions as I suspect" ! Prop.forAllNoShrink(tupleList) {case (la, lb) =>
+      la.length == lb.length
+    }
+
+    "work with for-comprehensions as I suspect part 2" ! Prop.forAllNoShrink(sameTupleList) {case (la, lb) =>
+      la.zip(lb).forall{case(a,b) => a == b}
+    }
+
+    val attributeHistogram: Gen[AttributeHistogram[Int]] = for {
+      bc <- Gen.choose[Int](1, 100)
+      ls <- Gen.listOf(almostAnyInt)
+    } yield {
+      val ah = AttributeHistogram.ZeroObject[Int](bc)
+      ls.foreach(ah.update(_))
+      ah
+    }
+    val attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
+      bc <- Gen.choose[Int](2, 100)
+      ls <- Gen.listOf(almostAnyInt)
+      ls2 <- Gen.listOf(almostAnyInt)
+    } yield {
+      val ah = AttributeHistogram.ZeroObject[Int](bc)
+      val ah2 = AttributeHistogram.ZeroObject[Int](bc)
+      ls.foreach(ah.update(_))
+      ls2.foreach(ah2.update(_))
+      (ah, ah2)
+    }
+
+    "retain number of observations" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+      val ocSum = ah.observationCount + ah2.observationCount
+      ah.merge(ah2)
+
+      if(ah.observationCount != ocSum)
+        println(ah)
+
+      ah.observationCount mustEqual ocSum
+    }
+
+    
+  }
 }
