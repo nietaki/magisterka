@@ -7,6 +7,7 @@ package net.almost_done.trees
 import Ordering.Implicits._
 import Numeric.Implicits._
 import scala.annotation.tailrec
+import scala.util.Sorting
 
 /**
  * a *mutable* AttributeHistogram class this will make it much more performance-friendly
@@ -44,7 +45,7 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
    * Low level array operations it is...
    * @param newOccurrence attribute value to add to the histogram
    */
-  def update(newOccurrence: T) = {
+  def update(newOccurrence: T): Unit = {
     /* PART 1 - insert */
     val updatingTuple = Tuple2(newOccurrence.toDouble(), 1)
     //arr.update(arr.length - 1, Tuple2(newOccurrence.toDouble(), 1))
@@ -101,7 +102,14 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
       (q, k)
     }
   }
-  def merge = ???
+  def merge(other: AttributeHistogram[T]): Unit = {
+    val combinedBinsSorted = Sorting.stableSort(this.resultingBins ++ other.resultingBins)
+
+    val workingArray = new Array[Bin](combinedBinsSorted.length + 1)
+    combinedBinsSorted.copyToArray(workingArray)
+
+
+  }
   def sum = ???
 
 
