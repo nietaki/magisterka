@@ -211,6 +211,26 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah.observationCount mustEqual ocSum
     }
 
-    
+    "retain sortedness" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+      ah.merge(ah2)
+      ah.binKeys.sliding(2).forall{ pair =>
+        if(pair.length < 2)
+          true
+        else {
+          pair.head <= pair.last
+        }
+      }
+    }
+
+    "retain weighted average" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+      if(ah.observationCount == 0 && ah2.observationCount == 0) {
+        0.0 must be closeTo(0.0, 0.1) //it's a hack!
+      } else {
+        val cummulativeWeightedAverage = (ah.weightedAverage * ah.observationCount + ah2.weightedAverage * ah2.observationCount) / (ah.observationCount + ah2.observationCount).toDouble
+        ah.merge(ah2)
+
+        ah.weightedAverage must be closeTo(cummulativeWeightedAverage, math.abs(cummulativeWeightedAverage / 1000))
+      }
+    }
   }
 }

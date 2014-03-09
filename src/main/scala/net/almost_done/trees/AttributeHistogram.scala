@@ -40,6 +40,8 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
 
   assert(resultingBins.length == arr.length - 1)
 
+  def weightedAverage: Double = if(observationCount == 0) 0.0 else resultingBins.map{case (k, v) => k*v}.sum / observationCount.toDouble
+
 
   /**
    * this could be done in a nicer fashion, but it would be less efficient.
