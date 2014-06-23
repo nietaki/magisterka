@@ -4,6 +4,7 @@ version := "0.1"
 
 libraryDependencies  ++= Seq(
             //"org.apache.spark" %% "spark-core" % "0.9.0-incubating",
+            "org.apache.spark" %% "spark-core" % "1.0.0",
             ////"org.scalanlp" %% "breeze-math" % "0.4-SNAPSHOT",
             //"org.scalanlp" % "breeze_2.10" % "0.5.2",
             ////"org.scalanlp" %% "breeze-learn" % "0.4-SNAPSHOT",
@@ -25,5 +26,5 @@ scalacOptions += "-deprecation"
 
 scalacOptions ++= Seq("-Xmax-classfile-name", "254")
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.4"
 
