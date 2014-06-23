@@ -14,7 +14,7 @@ import scala.util.Sorting
 
 class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
 
-  override implicit def defaultParameters = new Parameters(minTestsOk = 1000)
+  override implicit def defaultParameters = new Parameters(minTestsOk = 500)
 
 
   "binary search" should {
@@ -49,9 +49,13 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       } else true
     }}
 
-    "find a position after a value no smaller than X" ! Prop.forAll(sortedArrayOfInts, almostAnyInt) {(arr, x) =>{
-      true
+    "find a position before a value greater or equal than X - land at the end of a sequence" ! Prop.forAll(sortedArrayOfInts, almostAnyInt) {(arr, x) =>{
+      val pos = binarySearch(arr, x)
+      if(pos < arr.length - 1) {
+        arr(pos + 1) > x
+      } else true
     }}
+
     "find any element" in {
       val arr = Array(10, 11, 12, 13, 14)
       binarySearch(arr, 10) mustEqual 0

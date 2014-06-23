@@ -18,30 +18,24 @@ import scala.util.Sorting
 class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: Numeric[T]){
   import AttributeHistogram.Bin
 
-  //require(arr.sliding(2).forall(vec => { //FIXME skip the last pair
-  //  vec.head._1 <= vec.last._1
-  //}))
-
-
   /**
    * bin count determined by the array size - one spot leftover for the inserted values
    */
-  lazy val binCount = arr.length - 1
-
+  lazy val additionalBinIndex = arr.length - 1
 
   def observationCount: Int = resultingBins.map(_._2).sum
   /** for convenience index of the last modified value */
-  lazy val additionalBinIndex = arr.length - 1
 
   val resultingBins = arr.view(0, additionalBinIndex)
 
   def binKeys = resultingBins.map{pr => pr._1}.toSeq
   def binKeysAll = arr.map{pr => pr._1}.toSeq
 
-  assert(resultingBins.length == arr.length - 1)
-
-  def weightedAverage: Double = if(observationCount == 0) 0.0 else resultingBins.map{case (k, v) => k*v}.sum / observationCount.toDouble
-
+  def weightedAverage: Double =
+    if(observationCount == 0)
+      0.0
+    else
+      resultingBins.map{case (k, v) => k*v}.sum / observationCount.toDouble
 
   /**
    * this could be done in a nicer fashion, but it would be less efficient.
@@ -82,16 +76,35 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
 
     workingArray.copyToArray(arr, 0, additionalBinIndex)
   }
-  def sum = ???
 
+  /**
+   *
+   * @param b a point b such that p_1 < b < b_B
+   * @return Estimated number of points in the interval [-\infty, b]
+   */
+  def sum(b: T): Double = {
+    val bDouble = b.toDouble()
+    val i = AttributeHistogram.binarySearch(this.resultingBins, Tuple2(bDouble, 0))
+    //TODO: replace arr with a lazy view with prepended and appended bins
+    def doublify(b: Bin): (Double, Double) ={
+      (b._1, b._2.toDouble)
+    }
+    val (pi, mi) = doublify(arr(i))
+    val (pi2, mi2) = doublify(arr(i+1))
+
+    //TODO analyze the situation for when it's (either) the end of the array
+
+    val mb: Double = mi+ (mi2 - mi)/ (pi2 - pi) * (bDouble - pi)
+    val s: Double = (mi + mb) / 2 * (bDouble - pi)/(pi2 - pi)
+    //the view does exclude the i-th bin
+    val partialSum = arr.view(0, i).foldLeft(0){case (rollingSum, pr)  => rollingSum + pr._2}
+    s + partialSum
+  }
 
   override def toString = resultingBins.toList.toString
 }
 
 object AttributeHistogram {
-  import Numeric.Implicits._
-  import Ordering.Implicits._
-
   type Bin = (Double, Int)
 
   def ZeroObject[T](binCount: Integer)(implicit n: Numeric[T]) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2(0.0, 0)))
