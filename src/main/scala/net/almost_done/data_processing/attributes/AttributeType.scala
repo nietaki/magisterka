@@ -3,9 +3,23 @@ package net.almost_done.data_processing.attributes
 /**
  * Created by nietaki on 3/6/14.
  */
+
+/**
+ * a base class for different attribute types - numeric and nominal, with methods for parsing them both ways
+ *
+ * also contains the name of the attribute
+ */
 abstract class AttributeType {
   type ValueType
 
+  val name: String
+
+  /**
+   * @return an easily understandable definition of the attribute
+   */
+  def attributeRepresentation: String
+
+  override def toString() = s"$name: ${this.attributeRepresentation}"
   /**
    * parses a string representation of the value to a an Option of a value of a given type
    * @param representation string representation of the type

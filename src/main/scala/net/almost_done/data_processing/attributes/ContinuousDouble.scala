@@ -3,8 +3,10 @@ package net.almost_done.data_processing.attributes
 /**
  * Created by nietaki on 3/6/14.
  */
-case object ContinuousDouble extends AttributeType  {
+case class ContinuousDouble(val name: String) extends AttributeType  {
   type ValueType = Double
+
+  override def attributeRepresentation: String = "Continous Double"
 
   override def retrieveRepresentation(value: ValueType): String = value.toString
 

@@ -5,7 +5,7 @@ import scala.collection.immutable.Vector
 /**
  * Nominal has a definite number of distinct values
  */
-case class Nominal(values: Array[String]) extends AttributeType {
+case class Nominal(val name: String, values: Array[String]) extends AttributeType {
   type ValueType = Int
   val nominalValues: Vector[String] = Vector(values: _*)
 
@@ -15,5 +15,5 @@ case class Nominal(values: Array[String]) extends AttributeType {
 
   override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] = nameIndices.andThen(Some(_))
 
-  override def toString = "Nominal: " + nominalValues.reduce(_ + ", " + _)
+  override def attributeRepresentation: String = "Nominal: " + nominalValues.reduce(_ + ", " + _)
 }

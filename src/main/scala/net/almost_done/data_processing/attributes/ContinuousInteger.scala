@@ -3,10 +3,12 @@ package net.almost_done.data_processing.attributes
 /**
  * Created by nietaki on 3/6/14.
  */
-case object ContinuousInteger extends AttributeType {
+case class ContinuousInteger(val name: String) extends AttributeType {
   type ValueType = Int
 
-  override def retrieveRepresentation(value: ContinuousInteger.ValueType): String = value.toString
+  override def attributeRepresentation: String = "Continous Integer"
+
+  override def retrieveRepresentation(value: ValueType): String = value.toString
 
   override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] =  {
     case repr => {

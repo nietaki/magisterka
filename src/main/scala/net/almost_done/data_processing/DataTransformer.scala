@@ -22,23 +22,27 @@ class DataTransformer(val lines: RDD[String]) {
   val attributeNames: Vector[String] = Vector(nameCollections.map{_.head} : _*)
   val attributeValuesCollection: Array[Array[String]] = nameCollections.map{_.tail}
 
-  def getAttributeType(attributeValues: Array[String]): AttributeType = {
+  def getAttributeType(name: String, attributeValues: Array[String]): AttributeType = {
     assert(attributeValues.length > 0)
     val firstAttribute = attributeValues.head
 
     firstAttribute match {
-      case "ignore" => Ignore
-      case "continuous-integer" => ContinuousInteger
-      case "continuous-float" => ContinuousDouble
-      case "continuous-double" => ContinuousDouble
-      case _ => Nominal(attributeValues)
+      case "ignore" => Ignore(name)
+      case "continuous-integer" => ContinuousInteger(name)
+      case "continuous-float" => ContinuousDouble(name)
+      case "continuous-double" => ContinuousDouble(name)
+      case _ => Nominal(name, attributeValues)
     }
   }
 
-  lazy val attributeTypes: Array[AttributeType] = attributeValuesCollection.map(getAttributeType(_))
-  lazy val attributeTypesWithoutIgnore: Array[AttributeType] = {
+  /*
+   the actual output attributes collections
+  */
+  lazy val attributeTypes: Vector[AttributeType] = attributeNames.zip(attributeValuesCollection).map({case (n, v) => getAttributeType(n, v)})
+
+  lazy val attributeTypesWithoutIgnore: Vector[AttributeType] = {
     attributeTypes.filterNot( _ match {
-      case Ignore => true
+      case Ignore(_) => true
       case _ => false
     })
   }
