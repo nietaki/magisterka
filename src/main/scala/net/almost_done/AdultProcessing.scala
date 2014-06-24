@@ -1,5 +1,6 @@
-package net.almost_done.trees
+package net.almost_done
 
+import net.almost_done.data_processing.DataTransformer
 import org.apache.spark.SparkContext
 
 /**

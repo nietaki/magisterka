@@ -1,4 +1,4 @@
-package net.almost_done.trees
+package net.almost_done.data_processing.attributes
 
 /**
  * attribute of the type "Ignore" should not be taken into account when learning

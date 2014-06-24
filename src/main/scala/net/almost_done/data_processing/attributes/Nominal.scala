@@ -1,4 +1,4 @@
-package net.almost_done.trees
+package net.almost_done.data_processing.attributes
 
 import scala.collection.immutable.Vector
 

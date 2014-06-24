@@ -1,9 +1,10 @@
-package net.almost_done.trees
+package net.almost_done.data_processing
 
 /**
  * Created by nietaki on 3/3/14.
  */
 
+import net.almost_done.data_processing.attributes._
 import org.apache.spark.rdd._
 class DataTransformer(val lines: RDD[String]) {
 

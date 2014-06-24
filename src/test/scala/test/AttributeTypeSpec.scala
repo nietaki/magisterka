@@ -1,5 +1,7 @@
 package test
 
+import net.almost_done.data_processing.attributes.{Ignore, Nominal, ContinuousDouble}
+import net.almost_done.data_processing.Ignore
 import org.specs2.mutable._
 
 import net.almost_done.trees._
