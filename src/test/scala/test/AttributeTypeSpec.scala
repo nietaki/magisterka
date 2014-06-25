@@ -1,47 +1,48 @@
 package test
 
-import net.almost_done.data_processing.attributes.{Ignore, Nominal, ContinuousDouble}
-import net.almost_done.data_processing.Ignore
+import net.almost_done.data_processing.attributes.{Ignore, Nominal, ContinuousDouble, ContinuousInteger}
 import org.specs2.mutable._
 
 import net.almost_done.trees._
 
 class AttributeTypeSpec extends Specification {
- 
+  def Ignore2 = Ignore("foo")
+  def ContinuousDouble2 = ContinuousDouble("foo")
+
   "Ignore" should {
     "parse everything as None" in {
-      Ignore.parseRepresentation("0") must be equalTo(None)
+      Ignore2.parseRepresentation("0") must be equalTo(None)
     }
 
     "accept any type nad visualise it as a question mark" in {
-      Ignore.retrieveRepresentation(0) must beEqualTo("?")
+      Ignore2.retrieveRepresentation(0) must beEqualTo("?")
     }
   }
 
   "ContinousDouble" should {
     "generate parseable representations of floats" in {
-      val repr = ContinuousDouble.retrieveRepresentation(3.14159)
+      val repr = ContinuousDouble2.retrieveRepresentation(3.14159)
       repr.toDouble must be closeTo(3.14159, 0.0001)
     }
 
     "parse correctly formatted floats" in {
-      ContinuousDouble.parseRepresentation("3.14159").get must be closeTo(3.14159, 0.00001)
-      ContinuousDouble.parseRepresentation("3.14159E2").get must be closeTo(314.159, 0.00001)
+      ContinuousDouble2.parseRepresentation("3.14159").get must be closeTo(3.14159, 0.00001)
+      ContinuousDouble2.parseRepresentation("3.14159E2").get must be closeTo(314.159, 0.00001)
     }
 
     "parse an '?' as a missing value" in {
-      ContinuousDouble.parseRepresentation("?") mustEqual None
+      ContinuousDouble2.parseRepresentation("?") mustEqual None
     }
 
     "throw an exception on malformed strings" in {
-      ContinuousDouble.parseRepresentation("PI") should throwA[NumberFormatException]
+      ContinuousDouble2.parseRepresentation("PI") should throwA[NumberFormatException]
     }
 
 
   }
 
   "Nominal" should {
-    val n = Nominal(Array("zero", "one", "two", "three", "four"))
+    val n = Nominal("foo", Array("zero", "one", "two", "three", "four"))
     "parse the given nominal values to correct integers" in {
       n.parseRepresentation("zero").get mustEqual 0
       n.parseRepresentation("one").get mustEqual 1
