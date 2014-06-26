@@ -4,7 +4,7 @@ package net.almost_done.data_processing.attributes
  * attribute of the type "Ignore" should not be taken into account when learning
  */
 case class Ignore(val name: String) extends AttributeType {
-  type ValueType = Any
+  type ValueType = Int //for AttributeType to work
 
   override def attributeRepresentation: String = "Ignored"
 
@@ -14,7 +14,5 @@ case class Ignore(val name: String) extends AttributeType {
     case _ => None
   }
 
-  /**
-   * @return an easily understandable definition of the attribute
-   */
+  override def parseRepresentationToValue(representation: String): AttributeValue = AttributeValue[ValueType](None)
 }

@@ -6,15 +6,15 @@ package net.almost_done.data_processing.attributes
  * wrapper base class for attribute values to make working on Int and Double histograms easier
  */
 trait AttributeValue {
-  def intVal: Int;
-  def doubleVal: Double;
+  def intVal: Option[Int];
+  def doubleVal: Option[Double];
 }
 
 object AttributeValue {
-  def apply[N: Numeric](v: N) = new AttributeValue {
+  def apply[N: Numeric](v: Option[N]) = new AttributeValue {
     import Numeric.Implicits._ //TODO switch to spire Numeric here
-    def intVal = v.toInt()
-    def doubleVal = v.toDouble()
+    def intVal = v.map(_.toInt())
+    def doubleVal = v.map(_.toDouble())
   }
 }
 

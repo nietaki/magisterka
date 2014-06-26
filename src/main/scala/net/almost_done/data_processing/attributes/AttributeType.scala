@@ -29,6 +29,8 @@ abstract class AttributeType {
     (parseUnknown orElse parseRepresentationInner)(representation)
   }
 
+  def parseRepresentationToValue(representation: String): AttributeValue;
+
   val parseUnknown: PartialFunction[String, Option[ValueType]] = {
     case str if AttributeType.unknownStrings.contains(str) => None
   }

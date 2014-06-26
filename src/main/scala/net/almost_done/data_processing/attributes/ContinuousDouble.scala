@@ -17,4 +17,5 @@ case class ContinuousDouble(val name: String) extends AttributeType  {
     }
   }
 
+  override def parseRepresentationToValue(representation: String): AttributeValue = AttributeValue(parseRepresentation(representation))
 }

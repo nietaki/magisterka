@@ -15,4 +15,7 @@ case class ContinuousInteger(val name: String) extends AttributeType {
       Some(repr.toInt) //yes, throwing here
     }
   }
+
+
+  override def parseRepresentationToValue(representation: String): AttributeValue = AttributeValue(parseRepresentation(representation))
 }

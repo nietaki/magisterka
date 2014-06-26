@@ -16,4 +16,6 @@ case class Nominal(val name: String, values: Array[String]) extends AttributeTyp
   override def parseRepresentationInner: PartialFunction[String, Option[ValueType]] = nameIndices.andThen(Some(_))
 
   override def attributeRepresentation: String = "Nominal: " + nominalValues.reduce(_ + ", " + _)
+
+  override def parseRepresentationToValue(representation: String): AttributeValue = AttributeValue(parseRepresentation(representation))
 }
