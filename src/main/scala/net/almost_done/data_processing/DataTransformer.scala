@@ -13,4 +13,5 @@ object DataTransformer {
     val separators: Array[Char] = ":,".toCharArray //split category (if neccessary) and values
     noDot.split(separators).map{_.trim().replace(' ', '_')} //trim and change spaces to underscores
   }
+
 }
