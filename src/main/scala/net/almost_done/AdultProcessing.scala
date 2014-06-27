@@ -1,8 +1,15 @@
 package net.almost_done
 
-import net.almost_done.data_processing.{DataTransformer, AttributeTypesTransformer}
+import java.io.File
+
+import net.almost_done.data_processing.{DataTransformer, AttributeTypeFactory}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
+import shapeless._
+import poly._
+
+import scala.io.Source
+import net.almost_done.data_processing.{AttributeTypeFactory => ATF}
 
 /**
  * Created by nietaki on 3/6/14.
@@ -21,21 +28,25 @@ object AdultProcessing {
         List("target/scala-2.10/magisterka_2.10-0.1.jar"))
     */
     val sc = new SparkContext(conf)
-    val nameFile = "data/census/processed/census-income.names" // Should be some file on your system
-    val dataFile = "data/census/processed/census-income.data"
+    val dataPath = "data/census/processed/census-income.data"
 
-    val censusNames: RDD[String] = sc.textFile(nameFile, 4).cache()
-    val att = new AttributeTypesTransformer(censusNames)
+    val namePath = "data/census/processed/census-income.names" // Should be some file on your system
+    val nameFile = new File(namePath)
+    val lines: collection.Iterator[String] = Source.fromFile(nameFile).getLines()
+    val linesWithIndices = lines.zipWithIndex
+    val arguments: collection.Iterator[(String, Int, Array[String])] = linesWithIndices.map({case (line, index) =>
+      val fields = DataTransformer.sanitizeAndSplitRow(line)
+      val name = fields.head
+      val values = fields.tail
+      (name, index, values)
+    })
 
-    att.attributeTypes.foreach(println(_))
-    println(att.attributeTypes.length)
+    //val AttributeTypes = CensusData.attributeTypes
+    val AttributeTypes = CensusData.attributeTypesWithDecision
 
-    val censusData: RDD[String] = sc.textFile(dataFile, 12)
+    val censusData: RDD[String] = sc.textFile(dataPath, 12)
     val censusDataPreprocessed = censusData.map { row =>
-      //val values = DataTransformer.sanitizeAndSplitRow(row)
-      val noDot = row.stripSuffix(".") //remove the dots from the end (if neccessary)
-      val separators: Array[Char] = ":,".toCharArray //split category (if neccessary) and values
-      noDot.split(separators).map{_.trim().replace(' ', '_')} //trim and change spaces to underscores
+      val values = DataTransformer.sanitizeAndSplitRow(row)
       /*
       //att.removeIgnoredValues(values)
       */

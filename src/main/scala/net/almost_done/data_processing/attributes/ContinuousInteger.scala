@@ -3,7 +3,7 @@ package net.almost_done.data_processing.attributes
 /**
  * Created by nietaki on 3/6/14.
  */
-case class ContinuousInteger(val name: String) extends AttributeType {
+case class ContinuousInteger(val name: String, val columnIndex: Int) extends AttributeType[Int] {
   type ValueType = Int
 
   override def attributeRepresentation: String = "Continous Integer"
@@ -16,6 +16,4 @@ case class ContinuousInteger(val name: String) extends AttributeType {
     }
   }
 
-
-  override def parseRepresentationToValue(representation: String): AttributeValue = AttributeValue(parseRepresentation(representation))
 }
