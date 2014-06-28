@@ -42,8 +42,10 @@ object AdultProcessing {
     })
 
     //val AttributeTypes = CensusData.attributeTypes
-    val AttributeTypes = CensusData.attributeTypesWithDecision
-
+    //val AttributeTypes = CensusData.attributeTypesWithDecision
+    CensusData.allAttributeTypesWithDecision.foreach(println(_))
+    CensusData.attributeTypes.foreach(println(_))
+    return
     val censusData: RDD[String] = sc.textFile(dataPath, 12)
     val censusDataPreprocessed = censusData.map { row =>
       val values = DataTransformer.sanitizeAndSplitRow(row)

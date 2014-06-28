@@ -3,6 +3,7 @@ package net.almost_done.data_processing.attributes
 /**
  * attribute of the type "Ignore" should not be taken into account when learning
  */
+@deprecated("Ignore not used since moving away from shapeless", "")
 case class Ignore(val name: String, val columnIndex: Int) extends AttributeType[Any] {
   type ValueType = Any
 

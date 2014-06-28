@@ -7,7 +7,7 @@ import scala.io.Source
 import shapeless._
 import poly._
 
-import net.almost_done.data_processing.{AttributeTypeFactory => ATF, DataTransformer}
+import net.almost_done.data_processing.{AttributeTypeFactory, DataTransformer}
 /**
  * Created by nietaki on 27.06.14.
  */
@@ -23,50 +23,14 @@ object CensusData {
     (name, index, values)
   })
 
-  val attributeTypesWithDecision = ATF.int(arguments.next()) ::  //age
-    ATF.int(arguments.next()) :: //cow
-    ATF.int(arguments.next()) :: //dir
-    ATF.int(arguments.next()) :: //dor
-    ATF.int(arguments.next()) :: //education
-    ATF.int(arguments.next()) :: //academic
-    ATF.int(arguments.next()) :: //wage
-    ATF.int(arguments.next()) :: //enroll
-    ATF.int(arguments.next()) :: //marital
-    ATF.int(arguments.next()) :: //major industry code
-    ATF.int(arguments.next()) :: //major occupation code
-    ATF.int(arguments.next()) :: //race
-    ATF.int(arguments.next()) :: //hispanic origin
-    ATF.int(arguments.next()) :: //sex
-    ATF.int(arguments.next()) :: //labor union
-    ATF.int(arguments.next()) :: //reason of unemployment
-    ATF.int(arguments.next()) :: //full or part...
-    ATF.int(arguments.next()) :: //capital gains
-    ATF.int(arguments.next()) :: //capital losses
-    ATF.int(arguments.next()) :: //dividends
-    ATF.int(arguments.next()) :: //tax filer
-    ATF.int(arguments.next()) :: //region
-    ATF.int(arguments.next()) :: //state
-    ATF.int(arguments.next()) :: //detailed
-    ATF.ignore(arguments.next()) :: //instance weight
-    ATF.int(arguments.next()) :: //migration1
-    ATF.int(arguments.next()) :: //migration2
-    ATF.int(arguments.next()) :: //migration3
-    ATF.int(arguments.next()) :: //live in this house
-    ATF.int(arguments.next()) :: //migration4
-    ATF.int(arguments.next()) :: //num-persons
-    ATF.int(arguments.next()) :: //family members
-    ATF.int(arguments.next()) :: //country of birth father
-    ATF.int(arguments.next()) :: //country of birth self
-    ATF.int(arguments.next()) :: //citizenship
-    ATF.int(arguments.next()) :: //own business
-    ATF.int(arguments.next()) :: //fill inc questionnaire
-    ATF.int(arguments.next()) :: //veterans
-    ATF.int(arguments.next()) :: //veterans2
-    ATF.int(arguments.next()) :: //weeks
-    ATF.int(arguments.next()) :: //year
-    ATF.int(arguments.next()) :: HNil//decision
+  val allAttributeTypesWithDecision = arguments.map(tuple => AttributeTypeFactory.attribute(tuple._1, tuple._2, tuple._3)).toArray
+  allAttributeTypesWithDecision(24).ignored = true
 
-  val attributeTypes = attributeTypesWithDecision.init
-  val decisionAttribute = attributeTypesWithDecision.last
-  //val relevantAttributeTypes = attributeTypes.filterNot[Ignore]
+  val decisionAttribute = allAttributeTypesWithDecision.last
+
+  val allAttributeTypesWithoutDecision = allAttributeTypesWithDecision.init
+
+  val attributeTypes = allAttributeTypesWithoutDecision.filterNot(_.ignored)
+  
+
 }

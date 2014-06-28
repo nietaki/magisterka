@@ -8,35 +8,31 @@ import net.almost_done.data_processing.attributes._
 
 object AttributeTypeFactory {
 
-  def doubleAttr(name: String, columnIndex: Int, attributeValues: Array[String]): AttributeType[Double] = {
-    assert(attributeValues.length > 0)
-    val firstAttribute = attributeValues.head
+  type Argument = (String, Int, Array[String], String)
 
-    firstAttribute match {
-      case "continuous-double" => ContinuousDouble(name, columnIndex)
-      case _ => throw new IllegalArgumentException()
-    }
+  val doubleAttributeTupled: PartialFunction[Argument, AttributeType[Double]] = {
+    case(name, columnIndex, attributeValues, "continuous-double") => new ContinuousDouble(name, columnIndex)
   }
 
-  def double = (doubleAttr _).tupled
-
-  def intAttr(name: String, columnIndex: Int, attributeValues: Array[String]): AttributeType[Int] = {
-    assert(attributeValues.length > 0)
-    val firstAttribute = attributeValues.head
-
-    firstAttribute match {
-      case "continuous-integer" => ContinuousInteger(name, columnIndex)
-      case "continuous-double" => throw new IllegalArgumentException()
-      case _ => Nominal(name, columnIndex, attributeValues)
-    }
+  val intAttributeTupled: PartialFunction[Argument, AttributeType[Int]] = {
+    case(name, columnIndex, attributeValues, "continuous-integer") => new ContinuousInteger(name, columnIndex)
+    case(name, columnIndex, attributeValues, _) => new Nominal(name, columnIndex, attributeValues)
   }
 
-  def int = (intAttr _).tupled
-
-  def ignoreAttr(name: String, columnIndex: Int, attributeValues: Array[String]): Ignore = {
-    assert(attributeValues.length > 0)
-    Ignore(name, columnIndex)
+  val attributeTupled: PartialFunction[Argument, AttributeType[_]] = {
+    doubleAttributeTupled orElse intAttributeTupled
   }
-  def ignore = (ignoreAttr _).tupled
+
+  def attribute(name: String, columnIndex: Int, attributeValues: Array[String]) = {
+    attributeTupled((name, columnIndex, attributeValues, attributeValues(0)))
+  }
+
+  def doubleAttribute(name: String, columnIndex: Int, attributeValues: Array[String]) = {
+    doubleAttributeTupled((name, columnIndex, attributeValues, attributeValues(0)))
+  }
+
+  def intAttribute(name: String, columnIndex: Int, attributeValues: Array[String]) = {
+    intAttributeTupled((name, columnIndex, attributeValues, attributeValues(0)))
+  }
 
 }

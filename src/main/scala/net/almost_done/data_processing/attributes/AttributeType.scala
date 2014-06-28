@@ -20,10 +20,14 @@ abstract class AttributeType[ValueType] {
   val columnIndex: Int
 
   /**
+   * determines if the attribute should be ignored
+   */
+  var ignored = false
+
+  /**
    * @return an easily understandable definition of the attribute, for debugging purpuses only
    */
   def attributeRepresentation: String
-
   /**
    *
    * @return the value option parsed from its String representation
@@ -39,7 +43,7 @@ abstract class AttributeType[ValueType] {
 
 
   /* **end of the methods to be implemented** */
-  override def toString() = s"$name: ${this.attributeRepresentation}"
+  override def toString() = s"$columnIndex: $name: ${this.attributeRepresentation}"
 
   /**
    * Given a row of attribute values, parses the corresponding one
