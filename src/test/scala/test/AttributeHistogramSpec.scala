@@ -9,7 +9,9 @@ import org.specs2.matcher.{Parameters, TraversableMatchers}
 import scala.util.Random
 import org.specs2.ScalaCheck
 import org.scalacheck._
-import scala.util.Sorting
+import spire.algebra._   // provides algebraic type classes
+import spire.math._      // provides functions, types, and type classes
+import spire.implicits._ // provides infix operators, instances and conversions
 
 
 class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
@@ -25,7 +27,11 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
     val almostAnyInt = Gen.choose[Int](-10000, 10000)
     val listOfInts = Gen.listOf(almostAnyInt)
-    val sortedArrayOfInts = listOfInts.map(ls => Sorting.stableSort(ls))
+    val sortedArrayOfInts = listOfInts.map({ ls =>
+      val arr = ls.toArray
+      Sorting.mergeSort[Int](arr)
+      arr
+    })
 
     val trueProp = Prop.forAll(listOfInts){ls => true}
     "be true to itself ;)" ! trueProp
@@ -87,7 +93,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
     }
     "addValue" in {
       val binCount = 5
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(7)
       val bins = ah.resultingBins
       bins must beSorted
@@ -98,28 +104,28 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
     "insert two values in natural order" in {
       val binCount = 5
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(5)
       ah.update(7)
       val binKeys = ah.binKeys
       binKeys must beSorted
-      binKeys must containTheSameElementsAs(Seq(0.0, 0.0, 0.0, 5.0, 7.0)).updateMessage(s => s + " " + binKeys.toList)
+      binKeys must containTheSameElementsAs(Seq(0, 0, 0, 5, 7)).updateMessage(s => s + " " + binKeys.toList)
       //mustBeSame(binKeys, Seq(0.0, 0,0, 0.0, 5.0, 7.0))
     }
 
     "insert two values in reversed order" in {
       val binCount = 5
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(7)
       ah.update(5)
       val binKeys = ah.binKeys
       binKeys must beSorted
-      binKeys must containTheSameElementsAs(Seq(0.0, 0.0, 0.0, 5.0, 7.0)).updateMessage(s => s + " " + binKeys.toList)
+      binKeys must containTheSameElementsAs(Seq(0, 0, 0, 5, 7)).updateMessage(s => s + " " + binKeys.toList)
     }
 
     "insert distinct values to fill up the histogram" in {
       val binCount = 5
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       val values = Seq(1,2,3,4,5)
       //this is where we would prefer to use ScalaCheck
       val shuffled = new Random(5334).shuffle(values)
@@ -127,21 +133,21 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
       val binKeys = ah.binKeys
       binKeys must beSorted
-      binKeys must containTheSameElementsAs(values.map{_.toDouble}).updateMessage(s => s + " " + binKeys.toList)
+      binKeys must containTheSameElementsAs(values).updateMessage(s => s + " " + binKeys.toList)
     }
     val almostAnyInt = Gen.choose[Int](-100, 100)
     val smallIntBinCount = Gen.choose[Int](1, 10)
     val listOfInts = Gen.listOf(almostAnyInt)
 
     "have the correct total item count in all bins" ! Prop.forAll(listOfInts, smallIntBinCount) {(ls, binCount) => {
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       ls.foreach{ah.update(_)}
       val binCountSum = ah.resultingBins.map{_._2}.sum
       binCountSum mustEqual ls.length
     }}
 
     "have the bins sorted" ! Prop.forAllNoShrink(listOfInts, smallIntBinCount) {(ls, binCount) => {
-      val ah = AttributeHistogram.ZeroObject[Int](binCount)
+      val ah = AttributeHistogram.empty[Int](binCount)
       ls.foreach{ah.update(_)}
       ah.binKeys.sliding(2).filter(_.length >= 2).forall{seq =>
         seq(0) <= seq(1) //ERROR
@@ -153,7 +159,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
      stranger than fiction so in practice it's a little more complicated
      */
     "have the bin keys within bounds" ! Prop.forAllNoShrink(listOfInts, smallIntBinCount) {(ls, binCount) => {
-      val ah = AttributeHistogram.ZeroObject[Int](binCount) //we need at least 2 buckets for this test
+      val ah = AttributeHistogram.empty[Int](binCount) //we need at least 2 buckets for this test
       ls.foreach{ah.update(_)}
       (!ls.isEmpty && (binCount > 1) ) ==> ((ah.binKeys.head >= ls.min || ah.binKeys.head == 0) && (ah.binKeys.last <= ls.max || ah.binKeys.last == 0 ))
     }}
@@ -190,7 +196,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       bc <- Gen.choose[Int](1, 10)
       ls <- Gen.listOf(almostAnyInt)
     } yield {
-      val ah = AttributeHistogram.ZeroObject[Int](bc)
+      val ah = AttributeHistogram.empty[Int](bc)
       ls.foreach(ah.update(_))
       ah
     }
@@ -199,8 +205,8 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ls <- Gen.listOf(almostAnyInt)
       ls2 <- Gen.listOf(almostAnyInt)
     } yield {
-      val ah = AttributeHistogram.ZeroObject[Int](bc)
-      val ah2 = AttributeHistogram.ZeroObject[Int](bc)
+      val ah = AttributeHistogram.empty[Int](bc)
+      val ah2 = AttributeHistogram.empty[Int](bc)
       ls.foreach(ah.update(_))
       ls2.foreach(ah2.update(_))
       (ah, ah2)
@@ -234,7 +240,8 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
         val cummulativeWeightedAverage = (ah.weightedAverage * ah.observationCount + ah2.weightedAverage * ah2.observationCount) / (ah.observationCount + ah2.observationCount).toDouble
         ah.merge(ah2)
 
-        ah.weightedAverage must be closeTo(cummulativeWeightedAverage, math.abs(cummulativeWeightedAverage / 1000) + 0.01)
+        //ah.weightedAverage must be closeTo(cummulativeWeightedAverage, math.abs(cummulativeWeightedAverage / 1000) + 0.01)
+        ah.weightedAverage must be closeTo(cummulativeWeightedAverage, 1.0)
       }
     }
   }

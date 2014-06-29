@@ -3,20 +3,20 @@ package net.almost_done.trees
 /**
  * Created by nietaki on 3/7/14.
  */
-
-import Ordering.Implicits._
-import Numeric.Implicits._
+import spire.algebra._   // provides algebraic type classes
+import spire.math._      // provides functions, types, and type classes
+import spire.implicits._ // provides infix operators, instances and conversions
 import scala.annotation.tailrec
-import scala.util.Sorting
 
 /**
  * a *mutable* AttributeHistogram class this will make it much more performance-friendly
  * @param arr the mutable Array size of which determines the binCount
- * @param n the numeric extension class for T
  * @tparam T numeric type of the attribute, most commonly an Int or a Double
  */
-class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: Numeric[T]){
+class AttributeHistogram[T: Numeric](val arr: Array[AttributeHistogram.Bin[T]]){
   import AttributeHistogram.Bin
+
+  lazy val tZero = implicitly[Numeric[T]].zero
 
   /**
    * bin count determined by the array size - one spot leftover for the inserted values
@@ -35,7 +35,7 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
     if(observationCount == 0)
       0.0
     else
-      resultingBins.map{case (k, v) => k*v}.sum / observationCount.toDouble
+      resultingBins.map{case (k, v) => k.toDouble()*v}.sum / observationCount.toDouble
 
   /**
    * this could be done in a nicer fashion, but it would be less efficient.
@@ -45,7 +45,7 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
    */
   def update(newOccurrence: T): Unit = {
     /* PART 1 - insert */
-    val updatingTuple = Tuple2(newOccurrence.toDouble(), 1)
+    val updatingTuple = Tuple2(newOccurrence, 1)
     //arr.update(arr.length - 1, Tuple2(newOccurrence.toDouble(), 1))
     val withoutLast = arr.view(0, additionalBinIndex)
 
@@ -66,9 +66,10 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
 
   def merge(other: AttributeHistogram[T]): Unit = {
     assert(this.resultingBins.length == other.resultingBins.length)
-    val combinedBinsSorted = Sorting.stableSort(this.resultingBins ++ other.resultingBins)
+    val combinedBinsSorted = (this.resultingBins ++ other.resultingBins).toArray
+    Sorting.mergeSort(combinedBinsSorted)
 
-    val workingArray = Array.fill[Bin](combinedBinsSorted.length + 1)((0.0, 0)) //TODO: this could be more efficient
+    val workingArray = Array.fill[Bin[T]](combinedBinsSorted.length + 1)((tZero, 0)) //TODO: this could be more efficient
     combinedBinsSorted.copyToArray(workingArray)
     Range(combinedBinsSorted.length, additionalBinIndex, -1).inclusive.foreach{idx => {
       AttributeHistogram.shrinkBinArrayByOne(workingArray, idx)
@@ -83,11 +84,11 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
    * @return Estimated number of points in the interval [-\infty, b]
    */
   def sum(b: T): Double = {
-    val bDouble = b.toDouble()
-    val i = AttributeHistogram.binarySearch(this.resultingBins, Tuple2(bDouble, 0))
+    val i = AttributeHistogram.binarySearch(this.resultingBins, (b, 0))
+    val bDouble = b.toDouble() //FIXME make sure we need to convert to double
     //TODO: replace arr with a lazy view with prepended and appended bins
-    def doublify(b: Bin): (Double, Double) ={
-      (b._1, b._2.toDouble)
+    def doublify(b: Bin[T]): (Double, Double) ={
+      (b._1.toDouble(), b._2.toDouble)
     }
     val (pi, mi) = doublify(arr(i))
     val (pi2, mi2) = doublify(arr(i+1))
@@ -105,11 +106,11 @@ class AttributeHistogram[T](val arr: Array[AttributeHistogram.Bin])(implicit n: 
 }
 
 object AttributeHistogram {
-  type Bin = (Double, Int)
+  type Bin[T] = (T, Int)
 
-  def ZeroObject[T](binCount: Integer)(implicit n: Numeric[T]) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2(0.0, 0)))
+  def empty[T: Numeric](binCount: Int) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2((implicitly[Numeric[T]].zero), 0)))
 
-  def binarySearch[A <% Ordered[A]](a: IndexedSeq[A], v: A) = {
+  def binarySearch[A: Order](a: IndexedSeq[A], v: A) = {
     @tailrec
     def recurse(low: Int, high: Int): Int = (low + high) / 2 match {
       //case _ if high < low => None
@@ -126,12 +127,12 @@ object AttributeHistogram {
    * @param binArray the binArray the method should be modifying
    * @param currentItemCount currentItemCount. The Array should be bigger than currentItemCount by at least 1.
    */
-  protected def shrinkBinArrayByOne(binArray: Array[Bin], currentItemCount: Int): Unit = {
+  protected def shrinkBinArrayByOne[T: Numeric](binArray: Array[Bin[T]], currentItemCount: Int): Unit = {
     /* finding the tuples to combine */
     assert(binArray.length > currentItemCount)
 
     /* PART 2 - finding the tuples to combine */
-    var minDifference = Double.PositiveInfinity
+    var minDifference: T = binArray(0)._1 + 100000000 //TODO this would be better if this was infinity
     var minDiffIdx: Int = 0;
     Range(0, currentItemCount).foreach(idx => {
       val diff = binArray(idx+1)._1 - binArray(idx)._1
@@ -143,7 +144,7 @@ object AttributeHistogram {
       if(binArray(idx)._2 == 0) {
         //the bin is empty, we can replace it no worries
         minDiffIdx = idx
-        minDifference = 0.0
+        minDifference = implicitly[Numeric[T]].zero
       }
     })
 
@@ -157,14 +158,14 @@ object AttributeHistogram {
 
   }
 
-  protected def combineBins(b1: Bin, b2: Bin): Bin = {
+  protected def combineBins[T: Numeric](b1: Bin[T], b2: Bin[T]): Bin[T] = {
     val (q1,k1) = b1
     val (q2,k2) = b2
 
     val k = k1 + k2
     if(k == 0) {
       //we don't want to divide by 0
-      (0.0, 0)
+      (implicitly[Numeric[T]].zero, 0)
     } else {
       val q = (q1 * k1 + q2 * k2) / (k1 + k2)
       (q, k)
