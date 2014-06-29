@@ -12,11 +12,12 @@ import net.almost_done.data_processing.{AttributeTypeFactory, DataTransformer}
  * Created by nietaki on 27.06.14.
  */
 object CensusData {
-  val namePath = "data/census/processed/census-income.names" // Should be some file on your system
+  val namePath = "data/census/processed/census-income.names"
+  val dataPath = "data/census/processed/census-income.data"
   private val nameFile = new File(namePath)
-  private val lines: collection.Iterator[String] = Source.fromFile(nameFile).getLines()
-  private val linesWithIndices = lines.zipWithIndex
-  private val arguments: collection.Iterator[(String, Int, Array[String])] = linesWithIndices.map({case (line, index) =>
+  private val nameLines: collection.Iterator[String] = Source.fromFile(nameFile).getLines()
+  private val nameLinesWithIndices = nameLines.zipWithIndex
+  private val arguments: collection.Iterator[(String, Int, Array[String])] = nameLinesWithIndices.map({case (line, index) =>
     val fields = DataTransformer.sanitizeAndSplitRow(line)
     val name = fields.head
     val values = fields.tail

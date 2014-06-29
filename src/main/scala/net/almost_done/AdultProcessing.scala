@@ -5,8 +5,6 @@ import java.io.File
 import net.almost_done.data_processing.{DataTransformer, AttributeTypeFactory}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
-import shapeless._
-import poly._
 
 import scala.io.Source
 import net.almost_done.data_processing.{AttributeTypeFactory => ATF}
@@ -28,25 +26,23 @@ object AdultProcessing {
         List("target/scala-2.10/magisterka_2.10-0.1.jar"))
     */
     val sc = new SparkContext(conf)
-    val dataPath = "data/census/processed/census-income.data"
-
-    val namePath = "data/census/processed/census-income.names" // Should be some file on your system
-    val nameFile = new File(namePath)
-    val lines: collection.Iterator[String] = Source.fromFile(nameFile).getLines()
-    val linesWithIndices = lines.zipWithIndex
-    val arguments: collection.Iterator[(String, Int, Array[String])] = linesWithIndices.map({case (line, index) =>
-      val fields = DataTransformer.sanitizeAndSplitRow(line)
-      val name = fields.head
-      val values = fields.tail
-      (name, index, values)
-    })
 
     //val AttributeTypes = CensusData.attributeTypes
     //val AttributeTypes = CensusData.attributeTypesWithDecision
     CensusData.allAttributeTypesWithDecision.foreach(println(_))
     CensusData.attributeTypes.foreach(println(_))
+
+    val dataFile = new File(CensusData.dataPath)
+    val dataLines: collection.Iterator[String] = Source.fromFile(dataFile).getLines()
+    dataLines.foreach({ line =>
+      val valueSequence = DataTransformer.sanitizeAndSplitRow(line)
+      val parsedValues = CensusData.attributeTypes.map(_.parseFromRow(valueSequence))
+      parsedValues.foreach(print(_))
+      println("row")
+    })
+
     return
-    val censusData: RDD[String] = sc.textFile(dataPath, 12)
+    val censusData: RDD[String] = sc.textFile(CensusData.dataPath, 12)
     val censusDataPreprocessed = censusData.map { row =>
       val values = DataTransformer.sanitizeAndSplitRow(row)
       /*

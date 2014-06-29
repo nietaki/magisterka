@@ -16,6 +16,7 @@ object AttributeTypeFactory {
 
   val intAttributeTupled: PartialFunction[Argument, AttributeType[Int]] = {
     case(name, columnIndex, attributeValues, "continuous-integer") => new ContinuousInteger(name, columnIndex)
+      //TODO add ignored
     case(name, columnIndex, attributeValues, _) => new Nominal(name, columnIndex, attributeValues)
   }
 
