@@ -7,7 +7,7 @@ import net.almost_done.trees._
 
 class AttributeTypeSpec extends Specification {
   def Ignore2 = Ignore("foo", 1)
-  def ContinuousDouble2 = ContinuousDouble("foo", 1)
+  def ContinuousDouble2 = new ContinuousDouble("foo", 1)
 
   "Ignore" should {
     "parse everything as None" in {
@@ -40,7 +40,7 @@ class AttributeTypeSpec extends Specification {
   }
 
   "Nominal" should {
-    val n = Nominal("foo",0, Array("zero", "one", "two", "three", "four"))
+    val n = new Nominal("foo",0, Array("zero", "one", "two", "three", "four"))
     "parse the given nominal values to correct integers" in {
       n.parseRepresentation("zero").get mustEqual 0
       n.parseRepresentation("one").get mustEqual 1

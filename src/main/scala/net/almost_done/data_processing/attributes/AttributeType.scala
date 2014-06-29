@@ -1,5 +1,7 @@
 package net.almost_done.data_processing.attributes
 
+import net.almost_done.trees.AttributeHistogram
+
 /**
  * Created by nietaki on 3/6/14.
  */
@@ -76,6 +78,7 @@ abstract class AttributeType[ValueType] {
     case None => defaultNoneString
   }
 
+  //def emptyHistogram(size: Int)(implicit n: Numeric[ValueType]): AttributeHistogram[ValueType] = AttributeHistogram.empty[ValueType](size)
 
   val defaultNoneString: String = "?"
 }
