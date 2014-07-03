@@ -34,7 +34,7 @@ object AdultProcessing {
 
     val dataFile = new File(CensusData.dataPath)
     val dataLines: collection.Iterator[String] = Source.fromFile(dataFile).getLines()
-    dataLines.foreach({ line =>
+    dataLines.take(10).foreach({ line =>
       val valueSequence = DataTransformer.sanitizeAndSplitRow(line)
       val parsedValues = CensusData.attributeTypes.map(_.parseFromRow(valueSequence))
       parsedValues.foreach(print(_))
@@ -52,13 +52,6 @@ object AdultProcessing {
     }
 
     val res = censusDataPreprocessed.collect()
-    /*res.foreach{ arr =>
-      arr.foreach(print(_))
-      println()
-      println()
-    }*/
-    println(res.length)
-    //println(censusDataPreprocessed.count())
-    //res.foreach(println(_))
+
   }
 }

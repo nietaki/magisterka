@@ -1,17 +1,14 @@
 package test
 
-import org.specs2.mutable._
-
 import net.almost_done.trees._
-import scala.collection.mutable
-import org.specs2.specification._
-import org.specs2.matcher.{Parameters, TraversableMatchers}
-import scala.util.Random
-import org.specs2.ScalaCheck
 import org.scalacheck._
-import spire.algebra._   // provides algebraic type classes
-import spire.math._      // provides functions, types, and type classes
-import spire.implicits._ // provides infix operators, instances and conversions
+import org.specs2.ScalaCheck
+import org.specs2.matcher.{Parameters, TraversableMatchers}
+import org.specs2.mutable._
+import spire.implicits._
+import spire.math._
+
+import scala.util.Random // provides infix operators, instances and conversions
 
 
 class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
@@ -20,7 +17,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
 
   "binary search" should {
-    import AttributeHistogram._
+    import net.almost_done.trees.AttributeHistogram._
 
     /* http://etorreborre.github.io/specs2/guide/org.specs2.guide.Matchers.html#ScalaCheck */
     "be able to include scalacheck tests" ! prop { (a: Int) => a + a == 2 * a }
@@ -167,24 +164,9 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
   }
 
   "ScalaCheck's generators" should {
-    val positiveInt = Gen.choose[Int](1, 100)
-    val almostAnyInt = Gen.choose[Int](-100, 100)
-    val tupleList:Gen[(List[Int], List[Int])] = {
-      for{
-        length <- positiveInt
-        la <- Gen.listOfN(length, almostAnyInt)
-        lb <- Gen.listOfN(length, almostAnyInt)
-      } yield (la, lb)
-    } // Dem Monads
+    import Generators._
 
-    val sameTupleList:Gen[(List[Int], List[Int])] = {
-      for{
-        length <- positiveInt
-        la <- Gen.listOfN(length, almostAnyInt)
-      } yield (la, la)
-    }
-
-    "work with for-comprehensions as I suspect" ! Prop.forAllNoShrink(tupleList) {case (la, lb) =>
+    "work with for-comprehensions as I suspect" ! Prop.forAllNoShrink(smallIntTupleList) {case (la, lb) =>
       la.length == lb.length
     }
 
@@ -194,7 +176,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
     val attributeHistogram: Gen[AttributeHistogram[Int]] = for {
       bc <- Gen.choose[Int](1, 10)
-      ls <- Gen.listOf(almostAnyInt)
+      ls <- Gen.listOf(smallInt)
     } yield {
       val ah = AttributeHistogram.empty[Int](bc)
       ls.foreach(ah.update(_))
@@ -202,8 +184,8 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
     }
     val attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
       bc <- Gen.choose[Int](2, 10)
-      ls <- Gen.listOf(almostAnyInt)
-      ls2 <- Gen.listOf(almostAnyInt)
+      ls <- Gen.listOf(smallInt)
+      ls2 <- Gen.listOf(smallInt)
     } yield {
       val ah = AttributeHistogram.empty[Int](bc)
       val ah2 = AttributeHistogram.empty[Int](bc)
@@ -232,7 +214,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
         }
       }
     }
-
+    /*
     "retain weighted average" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
       if(ah.observationCount == 0 && ah2.observationCount == 0) {
         0.0 must be closeTo(0.0, 0.1) //it's a hack!
@@ -244,5 +226,6 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
         ah.weightedAverage must be closeTo(cummulativeWeightedAverage, 1.0)
       }
     }
+    */
   }
 }

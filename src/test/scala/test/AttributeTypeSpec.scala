@@ -1,14 +1,17 @@
 package test
 
+import net.almost_done.data_processing.{AttributeTypeFactory, DataTransformer}
 import net.almost_done.data_processing.attributes.{Ignore, Nominal, ContinuousDouble, ContinuousInteger}
+import org.scalacheck.Prop
+import org.specs2.ScalaCheck
 import org.specs2.mutable._
 
 import net.almost_done.trees._
 
-class AttributeTypeSpec extends Specification {
+class AttributeTypeSpec extends Specification with ScalaCheck{
   def Ignore2 = Ignore("foo", 1)
   def ContinuousDouble2 = new ContinuousDouble("foo", 1)
-
+  def contInt = new ContinuousInteger("foo", 13)
   "Ignore" should {
     "parse everything as None" in {
       Ignore2.parseRepresentation("0") must be equalTo(None)
@@ -30,12 +33,25 @@ class AttributeTypeSpec extends Specification {
       ContinuousDouble2.parseRepresentation("3.14159E2").get must be closeTo(314.159, 0.00001)
     }
 
+    "parse all correctly formatted floats" in prop{ d: Double =>
+      (ContinuousDouble2.parseRepresentation(d.toString()).get - d).abs < 0.0001
+    }
+
     "parse an '?' as a missing value" in {
       ContinuousDouble2.parseRepresentation("?") mustEqual None
     }
 
     "throw an exception on malformed strings" in {
       ContinuousDouble2.parseRepresentation("PI") should throwA[NumberFormatException]
+    }
+  }
+  "ContinuousInt" should {
+    "be constructed from a row correctly" in {
+      AttributeTypeFactory.attribute("foo", 13, Array("continuous-integer")).isInstanceOf[ContinuousInteger]
+    }
+
+    "parse all ints correctly" in prop {i: Int =>
+      contInt.parseRepresentation(i.toString()) == Some(i)
     }
   }
 
@@ -63,6 +79,19 @@ class AttributeTypeSpec extends Specification {
 
     "throw exception for incorrect nominal values" in {
       n.parseRepresentation("umpteen") should throwA[NoSuchElementException]
+    }
+
+    "always recognize the correct element of the sequence" in Prop.forAllNoShrink(Generators.printableAsciiString) {s: String =>
+      val values = DataTransformer.sanitizeAndSplitRow(s)
+      val idx = scala.util.Random.nextInt(values.length)
+      val at = AttributeTypeFactory.intAttribute("foo", 13, values)
+
+      at match {
+        case n: Nominal => {
+          n.parseRepresentation(values(idx)) == Some(idx)
+        }
+        case _ => false
+      }
     }
   }
 

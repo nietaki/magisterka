@@ -11,7 +11,11 @@ object DataTransformer {
   def sanitizeAndSplitRow(row: String): Array[String] = {
     val noDot = row.stripSuffix(".") //remove the dots from the end (if neccessary)
     val separators: Array[Char] = ":,".toCharArray //split category (if neccessary) and values
-    noDot.split(separators).map{_.trim().replace(' ', '_')} //trim and change spaces to underscores
+    noDot.split(separators).map{sanitize(_)}
+  }
+
+  def sanitize(term: String): String = {
+    term.trim().replace(' ', '_') //trim and change spaces to underscores
   }
 
 }
