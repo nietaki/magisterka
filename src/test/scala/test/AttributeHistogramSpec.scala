@@ -99,7 +99,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       //println(bins.toList)
     }
 
-    "insert two values in natural order" in {
+    "insert two values in natural order correctly" in {
       val binCount = 5
       val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(5)
@@ -110,7 +110,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       //mustBeSame(binKeys, Seq(0.0, 0,0, 0.0, 5.0, 7.0))
     }
 
-    "insert two values in reversed order" in {
+    "insert two values in reversed order correctly" in {
       val binCount = 5
       val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(7)
@@ -164,37 +164,20 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
   }
 
   "ScalaCheck's generators" should {
-    import Generators._
+    import test.Generators._
 
-    "work with for-comprehensions as I suspect" ! Prop.forAllNoShrink(smallIntTupleList) {case (la, lb) =>
+    "work with for-comprehensions as I suspect" ! Prop.forAllNoShrink(smallIntTupleList) { case (la, lb) =>
       la.length == lb.length
     }
 
-    "work with for-comprehensions as I suspect part 2" ! Prop.forAllNoShrink(sameTupleList) {case (la, lb) =>
-      la.zip(lb).forall{case(a,b) => a == b}
+    "work with for-comprehensions as I suspect part 2" ! Prop.forAllNoShrink(sameTupleList) { case (la, lb) =>
+      la.zip(lb).forall { case (a, b) => a == b}
     }
+  }
 
-    val attributeHistogram: Gen[AttributeHistogram[Int]] = for {
-      bc <- Gen.choose[Int](1, 10)
-      ls <- Gen.listOf(smallInt)
-    } yield {
-      val ah = AttributeHistogram.empty[Int](bc)
-      ls.foreach(ah.update(_))
-      ah
-    }
-    val attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
-      bc <- Gen.choose[Int](2, 10)
-      ls <- Gen.listOf(smallInt)
-      ls2 <- Gen.listOf(smallInt)
-    } yield {
-      val ah = AttributeHistogram.empty[Int](bc)
-      val ah2 = AttributeHistogram.empty[Int](bc)
-      ls.foreach(ah.update(_))
-      ls2.foreach(ah2.update(_))
-      (ah, ah2)
-    }
-
-    "retain number of observations" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+  "two histograms" should {
+    import test.Generators._
+    "retain number of observations when merged" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
       val ocSum = ah.observationCount + ah2.observationCount
       ah.merge(ah2)
 
@@ -204,7 +187,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah.observationCount mustEqual ocSum
     }
 
-    "retain sortedness" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+    "retain sortedness when merged" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
       ah.merge(ah2)
       ah.binKeys.sliding(2).forall{ pair =>
         if(pair.length < 2)
@@ -214,6 +197,8 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
         }
       }
     }
+
+
     /*
     "retain weighted average" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
       if(ah.observationCount == 0 && ah2.observationCount == 0) {

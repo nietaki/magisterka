@@ -1,6 +1,12 @@
 package test
 
-import org.scalacheck.Gen
+import net.almost_done.trees.AttributeHistogram
+import org.scalacheck.{Arbitrary, Gen}
+
+import spire.algebra._   // provides algebraic type classes
+import spire.math._      // provides functions, types, and type classes
+import spire.implicits._ // provides infix operators, instances and conversions
+
 
 /**
  * Created by nietaki on 03.07.14.
@@ -32,4 +38,38 @@ object Generators {
 
   def alphaNumOrSpace: Gen[Char] = Gen.frequency((9, Gen.alphaNumChar), (1, Gen.value(' ')))
   def alphaNumOrSpaceString = stringGen(alphaNumOrSpace)
+
+  @deprecated
+  def attributeHistogram: Gen[AttributeHistogram[Int]] = for {
+    bc <- Gen.choose[Int](1, 10)
+    ls <- Gen.listOf(smallInt)
+  } yield {
+    val ah = AttributeHistogram.empty[Int](bc)
+    ls.foreach(ah.update(_))
+    ah
+  }
+
+  @deprecated
+  def attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
+    bc <- Gen.choose[Int](2, 10)
+    ls <- Gen.listOf(smallInt)
+    ls2 <- Gen.listOf(smallInt)
+  } yield {
+    val ah = AttributeHistogram.empty[Int](bc)
+    val ah2 = AttributeHistogram.empty[Int](bc)
+    ls.foreach(ah.update(_))
+    ls2.foreach(ah2.update(_))
+    (ah, ah2)
+  }
+
+
+
+  def attributeHistogramOfSize[T: Numeric: Arbitrary](size: Int): Gen[AttributeHistogram[T]] = {
+    val valueGen = implicitly[Arbitrary[T]]
+    val listGen = Gen.listOf(valueGen.arbitrary)
+
+    listGen.map( ls =>
+      ls.foldLeft(AttributeHistogram.empty[T](size))(_.update(_))
+    )
+  }
 }

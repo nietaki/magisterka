@@ -43,7 +43,7 @@ class AttributeHistogram[T: Numeric](val arr: Array[AttributeHistogram.Bin[T]]){
    * Low level array operations it is...
    * @param newOccurrence attribute value to add to the histogram
    */
-  def update(newOccurrence: T): Unit = {
+  def update(newOccurrence: T): AttributeHistogram[T]= {
     /* PART 1 - insert */
     val updatingTuple = Tuple2(newOccurrence, 1)
     //arr.update(arr.length - 1, Tuple2(newOccurrence.toDouble(), 1))
@@ -61,6 +61,7 @@ class AttributeHistogram[T: Numeric](val arr: Array[AttributeHistogram.Bin[T]]){
     })
 
     AttributeHistogram.shrinkBinArrayByOne(arr, additionalBinIndex)
+    this
   }
 
 
