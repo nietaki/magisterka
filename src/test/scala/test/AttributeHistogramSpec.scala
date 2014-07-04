@@ -21,6 +21,12 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       MatcherHelpers.isSorted(ah.binKeys)
     }
 
+    "have its keys sorted after a series of updates" ! prop { intList: List[Int] =>
+      val ah = AttributeHistogram.empty[Int](7)
+      intList.foreach(ah.update(_))
+      MatcherHelpers.isSorted(ah.binKeys)
+    }
+
     "keep the count of inserted values" ! prop {intList: List[Int] =>
       val ah = AttributeHistogram.empty[Int](7)
       intList.foreach(ah.update(_))

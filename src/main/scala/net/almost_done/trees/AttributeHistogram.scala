@@ -13,7 +13,7 @@ import scala.annotation.tailrec
  * @param arr the mutable Array size of which determines the binCount
  * @tparam T numeric type of the attribute, most commonly an Int or a Double
  */
-class AttributeHistogram[T: Numeric](val arr: Array[AttributeHistogram.Bin[T]]){
+class AttributeHistogram[T: Numeric](private val arr: Array[AttributeHistogram.Bin[T]]){
   import AttributeHistogram.Bin
 
   lazy val tZero = implicitly[Numeric[T]].zero
@@ -46,11 +46,9 @@ class AttributeHistogram[T: Numeric](val arr: Array[AttributeHistogram.Bin[T]]){
   def update(newOccurrence: T): AttributeHistogram[T]= {
     /* PART 1 - insert */
     val updatingTuple = Tuple2(newOccurrence, 1)
-    //arr.update(arr.length - 1, Tuple2(newOccurrence.toDouble(), 1))
-    val withoutLast = arr.view(0, additionalBinIndex)
 
     /* this is where the new tuple should go - what value it should push towards the back */
-    val targetIndex = AttributeHistogram.binarySearch(withoutLast, updatingTuple)
+    val targetIndex = AttributeHistogram.binarySearch(resultingBins, updatingTuple)
 
     //adding the new value and pushing the later ones forward
     var newTuple = updatingTuple;
