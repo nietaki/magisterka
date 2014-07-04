@@ -21,13 +21,23 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       MatcherHelpers.isSorted(ah.binKeys)
     }
 
-    "have its min and max buckets within the bounds of inserted values" ! prop{intList: List[Int] =>
+    "keep the count of inserted values" ! prop {intList: List[Int] =>
       val ah = AttributeHistogram.empty[Int](7)
       intList.foreach(ah.update(_))
-      val minKey = min(intList.min, 0)
-      val maxKey = max(intList.max, 0)
-      val binKeys = ah.binKeys
-      binKeys.head >= minKey && binKeys.last <= maxKey
+      ah.observationCount == intList.length
+    }
+
+    "have its min and max buckets within the bounds of inserted values" ! prop{intList: List[Int] =>
+      if(intList.isEmpty) {
+        true
+      }else{
+        val ah = AttributeHistogram.empty[Int](7)
+        intList.foreach(ah.update(_))
+        val minKey = min(intList.min, 0)
+        val maxKey = max(intList.max, 0)
+        val binKeys = ah.binKeys
+        binKeys.head >= minKey && binKeys.last <= maxKey
+      }
     }
   }
 
