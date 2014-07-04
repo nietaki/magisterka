@@ -17,13 +17,17 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
 
   "any AttributeHistogram" should {
-    "have its keys sorted" ! Prop.forAllNoShrink(Generators.intAH) {ah =>
+    "have its keys sorted with Doubles" ! Prop.forAllNoShrink(Generators.doubleAH) {ah =>
       MatcherHelpers.isSorted(ah.binKeys)
     }
 
-    "have its keys sorted after a series of updates" ! prop { intList: List[Int] =>
-      val ah = AttributeHistogram.empty[Int](7)
-      intList.foreach(ah.update(_))
+    "have its keys sorted with Ints" ! Prop.forAllNoShrink(Generators.intAH) {ah =>
+      MatcherHelpers.isSorted(ah.binKeys)
+    }
+
+    "have its keys sorted after a series of updates" ! Prop.forAll(Generators.smallNumericList[Double]){ doubles: List[Double] =>
+      val ah = AttributeHistogram.empty[Double](7)
+      doubles.foreach(ah.update(_))
       MatcherHelpers.isSorted(ah.binKeys)
     }
 

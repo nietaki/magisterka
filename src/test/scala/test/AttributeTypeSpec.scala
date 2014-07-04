@@ -81,7 +81,7 @@ class AttributeTypeSpec extends Specification with ScalaCheck{
       n.parseRepresentation("umpteen") should throwA[NoSuchElementException]
     }
 
-    "always recognize the correct element of the sequence" in Prop.forAllNoShrink(Generators.printableAsciiString) {s: String =>
+    "always recognize the correct element of the sequence" in Prop.forAllNoShrink(Generators.printableAsciiStringWithoutQuestionMarks) {s: String =>
       val values = DataTransformer.sanitizeAndSplitRow(s).filter(! AttributeType.unknownStrings.contains(_))
       val idx = scala.util.Random.nextInt(values.length)
       val at = AttributeTypeFactory.intAttribute("foo", 13, values)

@@ -131,19 +131,20 @@ object AttributeHistogram {
     assert(binArray.length > currentItemCount)
 
     /* PART 2 - finding the tuples to combine */
-    var minDifference: T = binArray(0)._1 + 100000000 //TODO this would be better if this was infinity
+    var minDifference: Option[T] = None //TODO this would be better if this was infinity
     var minDiffIdx: Int = 0;
     Range(0, currentItemCount).foreach(idx => {
       val diff = binArray(idx+1)._1 - binArray(idx)._1
-      if(diff < minDifference) {
+      //if(diff < minDifference) {
+      if(minDifference.map(diff < _).getOrElse(true)) {
         minDiffIdx = idx
-        minDifference = diff
+        minDifference = Some(diff)
       }
 
       if(binArray(idx)._2 == 0) {
         //the bin is empty, we can replace it no worries
         minDiffIdx = idx
-        minDifference = implicitly[Numeric[T]].zero
+        minDifference = Some(implicitly[Numeric[T]].zero)
       }
     })
 

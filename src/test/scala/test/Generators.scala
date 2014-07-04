@@ -1,7 +1,7 @@
 package test
 
 import net.almost_done.trees.AttributeHistogram
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.{Choose, Arbitrary, Gen}
 
 import spire.algebra._   // provides algebraic type classes
 import spire.math._      // provides functions, types, and type classes
@@ -34,10 +34,14 @@ object Generators {
   def stringGen(c: Gen[Char]): Gen[String] = for(ls <- Gen.listOf(c)) yield ls.mkString
 
   def printableAsciiChar: Gen[Char] = Gen.choose(32, 126).map(_.toChar)
+  def printableAsciiCharWithoutQuestionMarks: Gen[Char] = Gen.choose(32, 126).map(_.toChar).filter(_ != '?')
   def printableAsciiString: Gen[String] = stringGen(printableAsciiChar)
+  def printableAsciiStringWithoutQuestionMarks: Gen[String] = stringGen(printableAsciiCharWithoutQuestionMarks)
 
   def alphaNumOrSpace: Gen[Char] = Gen.frequency((9, Gen.alphaNumChar), (1, Gen.value(' ')))
   def alphaNumOrSpaceString = stringGen(alphaNumOrSpace)
+
+  val maxAHMagnitude = 1000000 //TODO make this bigger
 
   @deprecated("use more generic AttributeHistogram generator", "")
   def attributeHistogram: Gen[AttributeHistogram[Int]] = for {
@@ -62,11 +66,17 @@ object Generators {
     (ah, ah2)
   }
 
-  def attributeHistogramOfSize[T: Numeric: Arbitrary](size: Int): Gen[AttributeHistogram[T]] = {
-    val valueGen = implicitly[Arbitrary[T]]
-    val listGen = Gen.listOf(valueGen.arbitrary)
 
-    listGen.map( ls =>
+  def smallNumeric[T: Numeric: Arbitrary: Choose]: Gen[T] = {
+    val numeric = implicitly[Numeric[T]]
+    Gen.choose[T](numeric.fromInt(-maxAHMagnitude), numeric.fromInt(maxAHMagnitude))
+  }
+  def smallNumericList[T: Numeric: Arbitrary: Choose]: Gen[List[T]] = {
+    Gen.listOf(smallNumeric[T])
+  }
+
+  def attributeHistogramOfSize[T: Numeric: Arbitrary: Choose](size: Int): Gen[AttributeHistogram[T]] = {
+    smallNumericList.map( ls =>
       ls.foldLeft(AttributeHistogram.empty[T](size))(_.update(_))
     )
   }
