@@ -13,6 +13,10 @@ class ExperimentalSpec extends Specification with TraversableMatchers with Scala
     "generate something" in Prop.forAll(Generators.alphaNumOrSpace) { ah => true }
     "generate an Int AttributeHistogram" in Prop.forAll(Generators.attributeHistogramOfSize[Int](10)) { ah => true }
     "generate a Double AttributeHistogram" in Prop.forAll(Generators.attributeHistogramOfSize[Double](10)) { ah => true }
+
+    "create tests without explicit generators" in prop { (i:Int, i2: Int) =>
+      i < i2 || i >= i2
+    }
   }
 
 }

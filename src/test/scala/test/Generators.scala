@@ -39,7 +39,7 @@ object Generators {
   def alphaNumOrSpace: Gen[Char] = Gen.frequency((9, Gen.alphaNumChar), (1, Gen.value(' ')))
   def alphaNumOrSpaceString = stringGen(alphaNumOrSpace)
 
-  @deprecated
+  @deprecated("use more generic AttributeHistogram generator", "")
   def attributeHistogram: Gen[AttributeHistogram[Int]] = for {
     bc <- Gen.choose[Int](1, 10)
     ls <- Gen.listOf(smallInt)
@@ -49,7 +49,7 @@ object Generators {
     ah
   }
 
-  @deprecated
+  @deprecated("use more generic AttributeHistogram generator", "")
   def attributeHistogramPair: Gen[(AttributeHistogram[Int], AttributeHistogram[Int])] = for {
     bc <- Gen.choose[Int](2, 10)
     ls <- Gen.listOf(smallInt)
@@ -62,8 +62,6 @@ object Generators {
     (ah, ah2)
   }
 
-
-
   def attributeHistogramOfSize[T: Numeric: Arbitrary](size: Int): Gen[AttributeHistogram[T]] = {
     val valueGen = implicitly[Arbitrary[T]]
     val listGen = Gen.listOf(valueGen.arbitrary)
@@ -72,4 +70,7 @@ object Generators {
       ls.foldLeft(AttributeHistogram.empty[T](size))(_.update(_))
     )
   }
+
+  val intAH = attributeHistogramOfSize[Int](7)
+  val doubleAH = attributeHistogramOfSize[Double](7)
 }

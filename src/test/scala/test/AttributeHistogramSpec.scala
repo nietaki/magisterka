@@ -16,7 +16,22 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
   override implicit def defaultParameters = new Parameters(minTestsOk = 500)
 
 
-  "binary search" should {
+  "any AttributeHistogram" should {
+    "have its keys sorted" ! Prop.forAllNoShrink(Generators.intAH) {ah =>
+      MatcherHelpers.isSorted(ah.binKeys)
+    }
+
+    "have its min and max buckets within the bounds of inserted values" ! prop{intList: List[Int] =>
+      val ah = AttributeHistogram.empty[Int](7)
+      intList.foreach(ah.update(_))
+      val minKey = min(intList.min, 0)
+      val maxKey = max(intList.max, 0)
+      val binKeys = ah.binKeys
+      binKeys.head >= minKey && binKeys.last <= maxKey
+    }
+  }
+
+  "Attribute Histogram binary search" should {
     import net.almost_done.trees.AttributeHistogram._
 
     /* http://etorreborre.github.io/specs2/guide/org.specs2.guide.Matchers.html#ScalaCheck */
@@ -110,6 +125,20 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       //mustBeSame(binKeys, Seq(0.0, 0,0, 0.0, 5.0, 7.0))
     }
 
+    "insert any two values without breaking sorting" in prop{(i1: Int, i2: Int) =>
+      val binCount = 5
+      val ah = AttributeHistogram.empty[Int](binCount)
+      ah.update(i1).update(i2)
+      MatcherHelpers.isSorted(ah.binKeys)
+    }
+
+    "when inserting two values, they should be in the bin keys" in  prop { (i1: Int, i2: Int) =>
+      val binCount = 5
+      val ah = AttributeHistogram.empty[Int](binCount)
+      ah.update(i1).update(i2)
+      ah.binKeys.contains(i1) && ah.binKeys.contains(i2)
+    }
+
     "insert two values in reversed order correctly" in {
       val binCount = 5
       val ah = AttributeHistogram.empty[Int](binCount)
@@ -132,6 +161,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       binKeys must beSorted
       binKeys must containTheSameElementsAs(values).updateMessage(s => s + " " + binKeys.toList)
     }
+
     val almostAnyInt = Gen.choose[Int](-100, 100)
     val smallIntBinCount = Gen.choose[Int](1, 10)
     val listOfInts = Gen.listOf(almostAnyInt)
@@ -177,7 +207,8 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
 
   "two histograms" should {
     import test.Generators._
-    "retain number of observations when merged" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+
+    "retain number of observations when merged" ! Prop.forAllNoShrink(intAH, intAH) {(ah, ah2) =>
       val ocSum = ah.observationCount + ah2.observationCount
       ah.merge(ah2)
 
@@ -187,15 +218,9 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah.observationCount mustEqual ocSum
     }
 
-    "retain sortedness when merged" ! Prop.forAllNoShrink(attributeHistogramPair) {case (ah, ah2) =>
+    "retain sortedness when merged" ! Prop.forAllNoShrink(intAH, intAH) {case (ah, ah2) =>
       ah.merge(ah2)
-      ah.binKeys.sliding(2).forall{ pair =>
-        if(pair.length < 2)
-          true
-        else {
-          pair.head <= pair.last
-        }
-      }
+      MatcherHelpers.isSorted(ah.binKeys)
     }
 
 

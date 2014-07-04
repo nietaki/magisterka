@@ -1,7 +1,7 @@
 package test
 
 import net.almost_done.data_processing.{AttributeTypeFactory, DataTransformer}
-import net.almost_done.data_processing.attributes.{Ignore, Nominal, ContinuousDouble, ContinuousInteger}
+import net.almost_done.data_processing.attributes._
 import org.scalacheck.Prop
 import org.specs2.ScalaCheck
 import org.specs2.mutable._
@@ -82,7 +82,7 @@ class AttributeTypeSpec extends Specification with ScalaCheck{
     }
 
     "always recognize the correct element of the sequence" in Prop.forAllNoShrink(Generators.printableAsciiString) {s: String =>
-      val values = DataTransformer.sanitizeAndSplitRow(s)
+      val values = DataTransformer.sanitizeAndSplitRow(s).filter(! AttributeType.unknownStrings.contains(_))
       val idx = scala.util.Random.nextInt(values.length)
       val at = AttributeTypeFactory.intAttribute("foo", 13, values)
 
