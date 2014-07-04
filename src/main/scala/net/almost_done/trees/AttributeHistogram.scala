@@ -63,7 +63,7 @@ class AttributeHistogram[T: Numeric](private val arr: Array[AttributeHistogram.B
   }
 
 
-  def merge(other: AttributeHistogram[T]): Unit = {
+  def merge(other: AttributeHistogram[T]): AttributeHistogram[T]= {
     assert(this.resultingBins.length == other.resultingBins.length)
     val combinedBinsSorted = (this.resultingBins ++ other.resultingBins).toArray
     Sorting.mergeSort(combinedBinsSorted)
@@ -75,6 +75,7 @@ class AttributeHistogram[T: Numeric](private val arr: Array[AttributeHistogram.B
     }}
 
     workingArray.copyToArray(arr, 0, additionalBinIndex)
+    this
   }
 
   /**
@@ -126,12 +127,12 @@ object AttributeHistogram {
    * @param binArray the binArray the method should be modifying
    * @param currentItemCount currentItemCount. The Array should be bigger than currentItemCount by at least 1.
    */
-  protected def shrinkBinArrayByOne[T: Numeric](binArray: Array[Bin[T]], currentItemCount: Int): Unit = {
+  def shrinkBinArrayByOne[T: Numeric](binArray: Array[Bin[T]], currentItemCount: Int): Unit = {
     /* finding the tuples to combine */
     assert(binArray.length > currentItemCount)
 
     /* PART 2 - finding the tuples to combine */
-    var minDifference: Option[T] = None //TODO this would be better if this was infinity
+    var minDifference: Option[T] = None
     var minDiffIdx: Int = 0;
     Range(0, currentItemCount).foreach(idx => {
       val diff = binArray(idx+1)._1 - binArray(idx)._1

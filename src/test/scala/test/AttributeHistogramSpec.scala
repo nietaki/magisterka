@@ -9,7 +9,7 @@ import spire.implicits._
 import spire.math._
 
 import scala.util.Random // provides infix operators, instances and conversions
-
+import Generators._
 
 class AttributeHistogramSpec extends Specification with TraversableMatchers with ScalaCheck {
 
@@ -225,10 +225,10 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
     }
   }
 
-  "two histograms" should {
+  "two histograms merge" should {
     import test.Generators._
 
-    "retain number of observations when merged" ! Prop.forAllNoShrink(intAH, intAH) {(ah, ah2) =>
+    "retain number of observations" ! Prop.forAllNoShrink(intAH, intAH) {(ah, ah2) =>
       val ocSum = ah.observationCount + ah2.observationCount
       ah.merge(ah2)
 
@@ -238,10 +238,19 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah.observationCount mustEqual ocSum
     }
 
-    "retain sortedness when merged" ! Prop.forAllNoShrink(intAH, intAH) {case (ah, ah2) =>
+    "retain sortedness" ! Prop.forAllNoShrink(intAH, intAH) {case (ah, ah2) =>
       ah.merge(ah2)
       MatcherHelpers.isSorted(ah.binKeys)
     }
+    /*
+    "not decrease the minimum bin key difference" ! Prop.forAllNoShrink(intAH, intAH) { (ah, ah2) =>
+      def minKeyDiff[T: Numeric: Ordering](ah: AttributeHistogram[T]) = {
+        ah.binKeys.sliding(2).map(ls => ls.last - ls.head).min
+      }
+      val actualMinKeyDiffBefore = min(minKeyDiff(ah), minKeyDiff(ah2))
+      actualMinKeyDiffBefore <= minKeyDiff(ah.merge(ah2))
+    }
+    */
 
 
     /*
@@ -257,5 +266,16 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       }
     }
     */
+  }
+
+  "AttributeHistogram.shrinkBinArrayByOne" should {
+    "retain all the instances in one less bin" ! pending
+     /*Prop.forAll(intAH) { ha =>
+      val arr = ha.resultingBins.toArray
+      val orig = new Array[(Int, Int)](arr.length)
+      arr.copyToArray(orig)
+      AttributeHistogram.shrinkBinArrayByOne(arr, arr.length)
+      arr.view(0, orig.length).map(_._2).sum == orig.map(_._2).sum
+    }*/
   }
 }
