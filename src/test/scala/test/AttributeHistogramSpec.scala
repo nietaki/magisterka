@@ -16,6 +16,24 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
   override implicit def defaultParameters = new Parameters(minTestsOk = 500)
 
 
+  "AttributeHistogram vector insert in order helper" should {
+    "return vector of the right length" ! prop{ (v: Vector[Int], i: Int) =>
+      AttributeHistogram.withInsertedInOrder(v.sorted, i).length == v.length + 1
+    }
+
+    "return a sorted vector" ! prop{(v: Vector[Int], i: Int) =>
+      val withInserted = AttributeHistogram.withInsertedInOrder(v.sorted, i)
+      withInserted.sliding(2).forall(v => v.head <= v.last)
+    }
+
+    "contain the inserted value" ! prop{(v: Vector[Int], i: Int) =>
+      val withInserted = AttributeHistogram.withInsertedInOrder(v.sorted, i)
+      withInserted.contains(i)
+    }
+
+  }
+
+
   "any AttributeHistogram" should {
     "have its keys sorted with Doubles" ! Prop.forAllNoShrink(Generators.doubleAH) {ah =>
       MatcherHelpers.isSorted(ah.binKeys)
@@ -127,7 +145,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       val binCount = 5
       val ah = AttributeHistogram.empty[Int](binCount)
       ah.update(7)
-      val bins = ah.resultingBins
+      val bins = ah.bins
       bins must beSorted
       bins must contain(Tuple2[Double, Int](0.0, 0))
       bins must contain(Tuple2[Double, Int](7.0, 1))
@@ -189,7 +207,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
     "have the correct total item count in all bins" ! Prop.forAll(listOfInts, smallIntBinCount) {(ls, binCount) => {
       val ah = AttributeHistogram.empty[Int](binCount)
       ls.foreach{ah.update(_)}
-      val binCountSum = ah.resultingBins.map{_._2}.sum
+      val binCountSum = ah.bins.map{_._2}.sum
       binCountSum mustEqual ls.length
     }}
 

@@ -81,6 +81,10 @@ object Generators {
     )
   }
 
+  val alt = implicitly[Arbitrary[List[Int]]].arbitrary
+  val vecGen = alt.map(_.toVector)
+  implicit val vecGenArbitrary = Arbitrary(vecGen)
+
   val intAH = attributeHistogramOfSize[Int](7)
   val doubleAH = attributeHistogramOfSize[Double](7)
 }
