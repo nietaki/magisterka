@@ -17,10 +17,6 @@ class ExperimentalSpec extends Specification with TraversableMatchers with Scala
     "create tests without explicit generators" in prop { (i:Int, i2: Int) =>
       i < i2 || i >= i2
     }
-
-    "have list.sliding the same length as list" in prop {(l: List[Int]) =>
-      l.sliding(2).length == l.length
-    }
   }
 
 }

@@ -9,14 +9,11 @@ import spire.implicits._ // provides infix operators, instances and conversions
 import scala.annotation.tailrec
 
 /**
- * @param binCount the binCount we want in the histogram
- * @tparam T numeric type of the attribute, most commonly an Int or a Double
  */
-class AttributeHistogram[T: Numeric](val binCount: Int){
+case class AttributeHistogram[T: Numeric] private (bins: Vector[AttributeHistogram.Bin[T]]){
   import AttributeHistogram.Bin
 
-  var bins: Vector[Bin[T]] = Vector.fill(binCount + 1)(Tuple2((implicitly[Numeric[T]].zero), 0))
-
+  //var bins: Vector[Bin[T]] = Vector.fill(binCount + 1)(Tuple2((implicitly[Numeric[T]].zero), 0))
 
   lazy val tZero = implicitly[Numeric[T]].zero
 
@@ -34,29 +31,19 @@ class AttributeHistogram[T: Numeric](val binCount: Int){
       bins.map{case (k, v) => k.toDouble()*v}.sum / observationCount.toDouble
 
   /**
-   * this could be done in a nicer fashion, but it would be less efficient.
-   *
-   * Low level array operations it is...
    * @param newOccurrence attribute value to add to the histogram
+   * @return the histogram with the new value inserted
    */
-  def update(newOccurrence: T): AttributeHistogram[T]= {
+  def updated(newOccurrence: T): AttributeHistogram[T]= {
     /* PART 1 - insert */
     val updatingTuple = Tuple2(newOccurrence, 1)
 
     val binsWithNewValue = AttributeHistogram.withInsertedInOrder(bins, updatingTuple)
-    //TODO find and merge tuples
-    /*
-    Range(targetIndex, additionalBinIndex).inclusive.foreach( idx => {
-      val curTuple = bins(idx)
-      bins.update(idx, newTuple)
-
-    AttributeHistogram.shrinkBinArrayByOne(bins, additionalBinIndex)
-    */
-    this
+    new AttributeHistogram[T](AttributeHistogram.shrinkBinVectorByOne(binsWithNewValue))
   }
 
 
-  def merge(other: AttributeHistogram[T]): AttributeHistogram[T]= {
+  def merged(other: AttributeHistogram[T]): AttributeHistogram[T]= {
     assert(this.bins.length == other.bins.length)
     val combinedBinsSorted = (this.bins ++ other.bins).toArray
     Sorting.mergeSort(combinedBinsSorted)
@@ -102,9 +89,7 @@ class AttributeHistogram[T: Numeric](val binCount: Int){
 object AttributeHistogram {
   type Bin[T] = (T, Int)
 
-  //def empty[T: Numeric](binCount: Int) = new AttributeHistogram[T](Array.fill(binCount + 1)(Tuple2((implicitly[Numeric[T]].zero), 0)))
-
-  def empty[T: Numeric](binCount: Int) = new AttributeHistogram[T](binCount)
+  def empty[T: Numeric](binCount: Int) = new AttributeHistogram[T](Vector.fill(binCount)(Tuple2((implicitly[Numeric[T]].zero), 0)))
 
   def binarySearch[A: Order](a: IndexedSeq[A], v: A) = {
     @tailrec
@@ -184,7 +169,7 @@ object AttributeHistogram {
     }).zipWithIndex
 
     //this chooses the smallest diff, taking into account the empty bins
-    val diffAndIndexToBeMerged = diffsWithStartingBinIndices.min
+    val diffAndIndexToBeMerged = diffsWithStartingBinIndices.reduce(min(_, _))
     val targetIndex = diffAndIndexToBeMerged._2
     val combinedBins = combineBins(binVector(targetIndex), binVector(targetIndex+1))
     (binVector.take(targetIndex) :+ combinedBins) ++ binVector.drop(targetIndex+2)

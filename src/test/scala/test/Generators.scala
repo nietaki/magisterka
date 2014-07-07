@@ -49,7 +49,7 @@ object Generators {
     ls <- Gen.listOf(smallInt)
   } yield {
     val ah = AttributeHistogram.empty[Int](bc)
-    ls.foreach(ah.update(_))
+    ls.foreach(ah.updated(_))
     ah
   }
 
@@ -61,8 +61,8 @@ object Generators {
   } yield {
     val ah = AttributeHistogram.empty[Int](bc)
     val ah2 = AttributeHistogram.empty[Int](bc)
-    ls.foreach(ah.update(_))
-    ls2.foreach(ah2.update(_))
+    ls.foreach(ah.updated(_))
+    ls2.foreach(ah2.updated(_))
     (ah, ah2)
   }
 
@@ -77,7 +77,7 @@ object Generators {
 
   def attributeHistogramOfSize[T: Numeric: Arbitrary: Choose](size: Int): Gen[AttributeHistogram[T]] = {
     smallNumericList.map( ls =>
-      ls.foldLeft(AttributeHistogram.empty[T](size))(_.update(_))
+      ls.foldLeft(AttributeHistogram.empty[T](size))(_.updated(_))
     )
   }
 
