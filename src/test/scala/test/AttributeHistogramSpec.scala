@@ -246,7 +246,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
   "two histograms merge" should {
     import test.Generators._
 
-    "retain number of observations" ! pending
+    "retain number of observations" !
     Prop.forAllNoShrink(intAH, intAH) {(ah, ah2) =>
       val ocSum = ah.observationCount + ah2.observationCount
       val ah3 = ah.merged(ah2)
@@ -254,7 +254,7 @@ class AttributeHistogramSpec extends Specification with TraversableMatchers with
       ah3.observationCount mustEqual ocSum
     }
 
-    "retain sortedness" ! pending
+    "retain sortedness" !
     Prop.forAllNoShrink(intAH, intAH) {case (ah, ah2) =>
       val ah3 = ah.merged(ah2)
       MatcherHelpers.isSorted(ah3.binKeys)

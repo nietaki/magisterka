@@ -46,17 +46,11 @@ case class AttributeHistogram[T: Numeric] private (bins: Vector[AttributeHistogr
   def merged(other: AttributeHistogram[T]): AttributeHistogram[T]= {
     assert(this.bins.length == other.bins.length)
     val combinedBinsSorted = (this.bins ++ other.bins).toArray
+    //FIXME - better sort
     Sorting.mergeSort(combinedBinsSorted)
-    /*
-    val workingArray = Array.fill[Bin[T]](combinedBinsSorted.length + 1)((tZero, 0)) //TODO: this could be more efficient
-    combinedBinsSorted.copyToArray(workingArray)
-    Range(combinedBinsSorted.length, additionalBinIndex, -1).inclusive.foreach{idx => {
-      AttributeHistogram.shrinkBinArrayByOne(workingArray, idx)
-    }}
-
-    workingArray.copyToArray(bins, 0, additionalBinIndex)
-    */
-    this
+    val sortedVector = combinedBinsSorted.toVector
+    val result = Range(sortedVector.length, this.bins.length, -1).foldLeft(sortedVector)((ahVector, size) => AttributeHistogram.shrinkBinVectorByOne(ahVector))
+    new AttributeHistogram(result)
   }
 
   /**
